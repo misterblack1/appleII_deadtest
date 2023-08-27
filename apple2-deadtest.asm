@@ -8,24 +8,7 @@
 ; The speaker will also tick the number of times the bit is bad. 
 ; And the screen will go from high res to low res
 
-F0000 = $0000 ; this stuff is leftover from the dead test disassembly
-F0100 = $0100 ; this values are the pages used to for the initial phase
-F0200 = $0200
-F0300 = $0300
-F0400 = $0400
-F0500 = $0500
-F0600 = $0600
-F0700 = $0700
-F0800 = $0800
-F0900 = $0900
-F0A00 = $0A00
-F0B00 = $0B00
-F0C00 = $0C00
-F0D00 = $0D00
-F0E00 = $0E00
-F0F00 = $0F00
-
-       * = $F800 ; this is designed to run in a 2K rom on the Apple II/II+
+		* = $F800 ; this is designed to run in a 2K rom on the Apple II/II+
 
 		SEI
 		CLD
@@ -46,93 +29,93 @@ start   LDA #$00
         LDX #$15
         LDY #$00
 
-IE18F   LDA FE7F7,X      ;fills up the first 4K with the byte from the memtest pattern
-        STA F0000,Y
-        STA F0100,Y
-        STA F0200,Y
-        STA F0300,Y
-        STA F0400,Y
-        STA F0500,Y
-        STA F0600,Y
-        STA F0700,Y
-        STA F0800,Y
-        STA F0900,Y
-        STA F0A00,Y
-        STA F0B00,Y
-        STA F0C00,Y
-        STA F0D00,Y
-        STA F0E00,Y
-        STA F0F00,Y
+zp_wr   LDA tst_tbl,X      ;fills up the first 4K with the byte from the memtest pattern
+        STA $0000,Y
+        STA $0100,Y
+        STA $0200,Y
+        STA $0300,Y
+        STA $0400,Y
+        STA $0500,Y
+        STA $0600,Y
+        STA $0700,Y
+        STA $0800,Y
+        STA $0900,Y
+        STA $0A00,Y
+        STA $0B00,Y
+        STA $0C00,Y
+        STA $0D00,Y
+        STA $0E00,Y
+        STA $0F00,Y
         INY 
-        BNE IE18F
+        BNE zp_wr
         TXA 
         LDX #$00
         LDY #$00
 
-IE1C7   DEY 			; wait a bit
-        BNE IE1C7
+zpw_p   DEY 			; wait a bit
+        BNE zpw_p
         DEX 
-        BNE IE1C7
+        BNE zpw_p
         TAX 
 		
-IE1CE   LDA F0000,Y		 ; now checkign to see if the contents of RAM is still good
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-		LDA F0100,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0200,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0300,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0400,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0500,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0600,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0700,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0800,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0900,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0A00,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0B00,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0C00,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0D00,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0E00,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
-        LDA F0F00,Y
-        CMP FE7F7,X      ;memtest pattern
-        BNE IE24C
+zp_rd   LDA $0000,Y		 ; now checkign to see if the contents of RAM is still good
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+		LDA $0100,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0200,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0300,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0400,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0500,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0600,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0700,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0800,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0900,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0A00,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0B00,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0C00,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0D00,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0E00,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
+        LDA $0F00,Y
+        CMP tst_tbl,X      ;memtest pattern
+        BNE biterr
         INY 
         BEQ IE24F
-        JMP IE1CE
+        JMP zp_rd
 
-IE24C   JMP IE25A		; there's a problem
+biterr	JMP findbit		; there's a problem
 
 IE24F   DEX 
         BMI IE010
         LDY #$00
-        JMP IE18F
+        JMP zp_wr
 
 IE010   ;memtest ok put the RAM test good code here
 		; Since first 4K is good, we can use Zerp page now
@@ -168,104 +151,109 @@ cls:	STA ($00),Y
 
 		; and we're done
 
-IE25A   EOR FE7F7,X      ;Figure out which bit is bad and store that in X
+findbit	EOR tst_tbl,X      ;Figure out which bit is bad and store that in X
         TAX 
         AND #$FE
-        BNE IE267
+        BNE chkbit1
         LDX #$01		 ; bit 0 is bad
-        JMP IE2A5        ;mem error flash
+        JMP flasherr        ;mem error flash
 
-IE267   TXA 
+chkbit1	TXA 
         AND #$FD
-        BNE IE271
+        BNE chkbit2
         LDX #$02		 ; bit 1 is bad
-        JMP IE2A5        ;mem error flash
+        JMP flasherr        ;mem error flash
 
-IE271   TXA 
+chkbit2	TXA 
         AND #$FB
-        BNE IE27B
+        BNE chkbit3
         LDX #$03		 ; bit 2 is bad
-        JMP IE2A5        ;mem error flash
+        JMP flasherr        ;mem error flash
 
-IE27B   TXA 
+chkbit3	TXA 
         AND #$F7
-        BNE IE285
+        BNE chkbit4
         LDX #$04		 ; bit 3 is bad
-        JMP IE2A5        ;mem error flash
+        JMP flasherr        ;mem error flash
 
-IE285   TXA 
+chkbit4	TXA 
         AND #$EF
-        BNE IE28F
+        BNE chkbit5
         LDX #$05		 ; bit 4 is bad
-        JMP IE2A5        ;mem error flash
+        JMP flasherr        ;mem error flash
 
-IE28F   TXA 
+chkbit5	TXA 
         AND #$DF
-        BNE IE299
+        BNE chkbit6
         LDX #$06		 ; bit 5 is bad
-        JMP IE2A5        ;mem error flash
+        JMP flasherr        ;mem error flash
 
-IE299   TXA 
+chkbit6	TXA 
         AND #$BF
-        BNE IE2A3
+        BNE chkbit7
         LDX #$07		 ; bit 6 is bad
-        JMP IE2A5        ;mem error flash
+        JMP flasherr        ;mem error flash
 
-IE2A3   LDX #$08		 ; bit 7 is bad
-		JMP IE2A5        ;mem error flash
-		
-IE2A5        			; time to flash the screen
+chkbit7	LDX #$08		 ; bit 7 is bad
+		JMP flasherr        ;mem error flash
+
+
+
+flasherr				; time to flash the screen
 						; put the error handling code here
-		TXS  			; X is holding the bad bit
+		TXS  			; X is holding the bad bit, save it in the SP
 		LDA $C050 		; turn on graphics
-IE2A6   LDA $C057 		; set high res
+f_loop	LDA $C057 		; set high res
 		LDA $C030 		; tick the speaker
 		TXA
+
         LDX #$7F
         LDY #$00
-IE2B3   DEY 
-        BNE IE2B3
+f_sp1	DEY 
+        BNE f_sp1
         DEX 
-        BNE IE2B3
-        TAX
+        BNE f_sp1
+
+        TAX				; save A in X
 		LDA $C056 		; set low res
-		TXA
+		TXA				; restore A
+
 		LDX #$7F
         LDY #$00
-IE2C7   DEY 			; wait a bit
-        BNE IE2C7
+f_sp2	DEY 			; wait a bit
+        BNE f_sp2
         DEX 
-        BNE IE2C7
+        BNE f_sp2
+f_sp3	DEY 			; wait a bit again
+        BNE f_sp3
+        DEX 
+        BNE f_sp3
 
-IE2CD   DEY 			
-        BNE IE2CD
-        DEX 
-        BNE IE2CD
         TAX 
         DEX 
-        BEQ IE2DA
-        JMP IE2A6
+        BEQ f_lp
+        JMP f_loop
 
-IE2DA   LDX #$00		; a long pause between flashes
+f_lp	LDX #$00		; a long pause between flashes
         LDY #$00
-IE2DE   DEY 
-        BNE IE2DE
+f_lp1   DEY 
+        BNE f_lp1
         DEX 
-        BNE IE2DE
-IE2E4   DEY 
-        BNE IE2E4
+        BNE f_lp1
+f_lp2	DEY 
+        BNE f_lp2
         DEX 
-        BNE IE2E4
-IE2EA   DEY 
-        BNE IE2EA
+        BNE f_lp2
+f_lp3   DEY 
+        BNE f_lp3
         DEX 
-        BNE IE2EA
-IE2F0   DEY 
-        BNE IE2F0
+        BNE f_lp3
+f_lp4   DEY 
+        BNE f_lp4
         DEX 
-        BNE IE2F0
+        BNE f_lp4
         TSX 		; stack pointer is holding bad bit
-        JMP IE2A6	; flash all over again
+        JMP f_loop	; flash all over again
 
 print:	LDY #$00	; code to print text to screen
 pnext:	LDA ($10),Y	; pointer to the string
@@ -283,18 +271,25 @@ skipv:	INC $10
 		JMP pnext
 pexit:	RTS
 
-beep:	DEY 		; will beep the computer forever to say things are good
-		BNE beep
+beep:	LDY #$A0
+beeplp:	DEY 		; will beep the computer to say things are good
+		BNE beeplp
 		LDA $C030	; tick the speaker
 		DEX
 		BNE beep
+beep2:	LDY #$A0
+beep2lp:DEY 		; extend beep twice as long without adding another loop index
+		BNE beep2lp
+		LDA $C030	; tick the speaker
+		DEX
+		BNE beep2
 
 done:	JMP done	; infinite loop
 
 ramok:
 .aasc "FIRST 4K OF RAM GOOD!", 0
 
-FE7F7   .BYTE $00,$55,$AA,$FF,$01,$02,$04,$08     ; memtest pattern
+tst_tbl   .BYTE $00,$55,$AA,$FF,$01,$02,$04,$08     ; memtest pattern
         .BYTE $10,$20,$40,$80,$FE,$FD,$FB,$F7     ; it cycles through all these bytes
         .BYTE $EF,$DF,$BF,$7F                     ; during the test
 
