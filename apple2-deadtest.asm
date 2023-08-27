@@ -205,6 +205,7 @@ flasherr				; time to flash the screen
 		LDA $C050 		; turn on graphics
 f_loop	LDA $C057 		; set high res
 		LDA $C030 		; tick the speaker
+		LDA $C030 		; tick the speaker again as on real hardware you need this twice
 		TXA
 
         LDX #$7F
