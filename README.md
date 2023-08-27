@@ -25,11 +25,12 @@ To decode the flashes:
 * ...
 * Bit 7 error -> 8 flashes
 
-Limitations:
-* This test is designed as an aid in troubleshooting only. 
-* The RAM subsystem on the Apple II is more complex than on other 8-bit computesr of the time. It relies on the video subsystem to keep the DRAM refreshed. It also has a dedicated DRAM OUTPUT bus that is switched to the CPU data bus as needed.
-* With all that in mind, it is very important to remember that an indicated bit error with this test can easily be caused by many other components on the motherboard, so do not immediately assume the RAM is faulty even with an indicated BIT error.
-* Please also keep in mind is that it will only flash the first bit it saw as wrong, starting at bit 0. So if you have a chip that has all bits bad, I presume it will only flash 1 time to indicate bit 0. Change that chip and run again.
+Limitations: 
+* This ROM is designed as a troubleshooting aid only.
+* An indicated bit error from this test does not mean the DRAM is faulty, it means the CPU is unable to correctly see the bit it expects from the DRAM. 
+* The RAM subsystem on the Apple II is more complex than that of other contemporary 8-bit systems of the time, so many components in that subsystem can cause indicated bit errors.
+* The Apple II has a dedicated DRAM output bus that is used to display text/graphics, and this bus is connected to the CPU data bus as needed.
+* Please keep in mind is that it will only flash the first bit it saw as wrong, starting at bit 0. So if you have a chip that has all bits bad, I presume it will only flash 1 time to indicate bit 0. Change that chip and run again.
 
 To use this ROM:
 * It is designed to run in the F8 ROM socket on the Apple II, Apple II+ or Apple ROM card.
