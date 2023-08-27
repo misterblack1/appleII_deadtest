@@ -27,12 +27,16 @@ To decode the flashes:
 
 Something to keep in mind is that it will only flash the first bit it saw as wrong, starting at bit 0. So if you have a chip that has all bits bad, I presume it will only flash 1 time to indicate bit 0. Change that chip and run again.
 
-To use this rom:
+To use this ROM:
 * It is designed to run in the F8 ROM socket on the Apple II, Apple II+ or Apple ROM card.
 * Since Apple uses 2316 (2K) mask ROMs on their motherboard, you will need an adapter to use an EPROM in any of these sockets. (Make one or use a PCB)
 * IIe can use a 2764 (8K) that holds EF ROM, so you can load this F8 ROM into the top of the chip ($1800)
 * Platinum //e has CF ROM which is a 27128 (16K) so you would load this F8 ROM into the top of the chip ($3800)
 * IIc ROM is 27256 (32k) and we have not tested this on the IIc
+
+To assemble the ROM:
+* Install XA on your computer using some package manager (apt-get xa)
+* Compile it with xa -C apple2-deadtest.asm -o 341-0020-00.f8
 
 Thanks: 
 * World of Jani for sharing disassembled C64 dead test code.
