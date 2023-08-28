@@ -31,7 +31,7 @@ marchU0:STA $00,Y		; w0 - write the test value
 		INY				; count up
 		BNE marchU0		; repeat until Y overflows back to zero
 
-		STY $00
+		; STY $00			; intentionally create an error for testing
 ; step 1; up - r0,w1,r1,w0
 ; A contains test value
 marchU1:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
