@@ -30,7 +30,8 @@ Limitations:
 * An indicated bit error from this test does not mean the DRAM is faulty, it means the CPU is unable to correctly see the bit it expects from the DRAM. This could be caused by a bad RAM chip or other faults on the system.
 * The RAM subsystem on the Apple II is more complex than that of other contemporary 8-bit systems of the time, so many components in that subsystem can cause indicated bit errors.
 * The Apple II has a dedicated DRAM output bus that is used to display text/graphics, and this bus is connected to the CPU data bus as needed.
-* Please keep in mind is that it will only flash the first bit it saw as wrong, starting at bit 0. So if you have a chip that has all bits bad, I presume it will only flash 1 time to indicate bit 0. Change that chip and run again.
+* Please keep in mind is that it will only flash the first bit it saw as wrong, starting at bit 7 (8 flashes.) So if you have multiple bad chips, the highest bad bit will usually win and flash. Change that chip and run again.
+* Remember that each bit of DRAM in each bank is parallel with the other banks, so even if the test is running on the first 4K of RAM, you could have a bad chip in an adjacent bank causing a bit error in the first 4K. 
 
 To use this ROM:
 * It is designed to run in the F8 ROM socket on the Apple II, Apple II+ or Apple ROM card.
