@@ -18,6 +18,13 @@
 		; soft switches
 		LDX $C051	; text mode
 		LDX $C054	; page 2 off
+
+		LDX $C00E	; turn off alt charset on later apple machines
+		LDX $C00C	; turn off 80 col		
+
+		LDX $C061	; read button 1
+		LDX $C062	; read button 2
+		LDX $C063 	; read button 3
 		
 sbeep:		DEY 		; startup beep
 		BNE sbeep
@@ -286,7 +293,19 @@ beep2lp:DEY 		; extend beep twice as long without adding another loop index
 		DEX
 		BNE beep2
 
-done:	JMP done	; infinite loop
+done:	
+		LDA $C061 ; read button 0
+		AND #$80
+		BNE again ; a joystick button or shift was pushed, so run again
+		LDA $C062 ; read button 0
+		AND #$80
+		BNE again
+		LDA $C063 ; read button 0
+		AND #$80
+		BNE again
+		JMP done	; infinite loop
+again:
+		JMP start
 
 ramok:
 .aasc "FIRST 4K OF RAM GOOD!", 0
