@@ -128,8 +128,8 @@ ramgood:; memtest ok put the RAM test good code here
 		STA $02
 					; clears the entire screen
 		LDY #$00
-npcl:		LDA #$A0 	; A0 is the black character on the Apple II and II plus
-cls:		STA ($00),Y
+npcl:	LDA #$A0 	; A0 is the black character on the Apple II and II plus
+cls:	STA ($00),Y
 		INY
 		BNE cls
 		INC $01
@@ -215,12 +215,12 @@ f_sp1:	DEY
         DEX 
         BNE f_sp1
 
-        TAX			; save A in X
-	LDA $C056 		; set low res
-	LDA $C030 		; tick the speaker
-	TXA			; restore A
+        TAX				; save A in X
+		LDA $C056 		; set low res
+		LDA $C030 		; tick the speaker
+		TXA				; restore A
 
-	LDX #$7F
+		LDX #$7F
         LDY #$00
 f_sp2:	DEY 			; wait a bit
         BNE f_sp2
@@ -246,19 +246,19 @@ f_lp2:	DEY
         BNE f_lp2
         DEX 
         BNE f_lp2
-f_lp3:   DEY 
+f_lp3:	DEY 
         BNE f_lp3
         DEX 
         BNE f_lp3
-f_lp4:   DEY 
+f_lp4:	DEY 
         BNE f_lp4
         DEX 
         BNE f_lp4
         TSX 		; stack pointer is holding bad bit
         JMP f_loop	; flash all over again
 
-print:		LDY #$00	; code to print text to screen
-pnext:		LDA ($10),Y	; pointer to the string
+print:	LDY #$00	; code to print text to screen
+pnext:	LDA ($10),Y	; pointer to the string
 		BEQ pexit	; end of string
 		ORA #$80	; to fix flashing text on Apple II and II+
 		STA ($00),Y	; video memory pointer
@@ -266,27 +266,27 @@ pnext:		LDA ($10),Y	; pointer to the string
 		CPY $00
 		BNE skipv
 		INC $01
-skipv:		INC $10
+skipv:	INC $10
 		CPY $10
 		BNE pnext
 		INC $11
 		JMP pnext
-pexit:		RTS
+pexit:	RTS
 
-beep:		LDY #$A0
-beeplp:		DEY 		; will beep the computer to say things are good
+beep:	LDY #$A0
+beeplp:	DEY 		; will beep the computer to say things are good
 		BNE beeplp
 		LDA $C030	; tick the speaker
 		DEX
 		BNE beep
-beep2:		LDY #$A0
-beep2lp:	DEY 		; extend beep twice as long without adding another loop index
+beep2:	LDY #$A0
+beep2lp:DEY 		; extend beep twice as long without adding another loop index
 		BNE beep2lp
 		LDA $C030	; tick the speaker
 		DEX
 		BNE beep2
 
-done:		JMP done	; infinite loop
+done:	JMP done	; infinite loop
 
 ramok:
 .aasc "FIRST 4K OF RAM GOOD!", 0
