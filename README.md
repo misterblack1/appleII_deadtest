@@ -1,7 +1,9 @@
 # Apple II Dead Test ROM
-While fixing an Apple II+ clone, I was annoyed there seemed to be no diagnostic ROM for the system that could test the RAM without using RAM.
+Recently while fixing an Apple II+ clone, I was annoyed there seemed to be no diagnostic ROMs available for the Apple II that could test the RAM without using RAM. 
 
-So this ROM is a result of that. I mostly ported the C64 dead test ROM over to the Apple II and replicated the functionality of the initial phase of that ROM. The main thing that makes this test great is it does NOT rely on DRAM at all. It runs entirely inside the ROM and does not use the ZERP PAGE ($00-$FF) or the stack ($100-$1FF.) All the other tests I found use that part of RAM, which isn't helpful if you have bad RAM in that part of the system.
+This ROM is a result of that. I started with a base of the C64 "Dead Test" ROM, porting that over to the Apple II and adjusted the functionality of the initial phase of that ROM. The main thing that makes this test great is it does NOT rely on DRAM at all. It runs entirely inside the ROM and does not use the ZERO PAGE ($00-$FF) or the stack ($100-$1FF.) All the other tests I found use that part of RAM, which isn't helpful if you have bad RAM in that part of the system.
+
+![Success](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/4K-test.png?raw=true)
 
 Note: It does use the ZERO PAGE at the end to print the message about the RAM being good. See below.
 
