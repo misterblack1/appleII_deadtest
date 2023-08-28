@@ -23,7 +23,7 @@ marchU:	LDY #$00
 		LDA tst_tbl,X	; get the test value into A
 		TXS				; save the index to the test value into SP
 		TAX				; copy the test value into X
-marchU0:STA $0000,Y		; w0 - write the test value
+marchU0:STA $00,Y		; w0 - write the test value
 		STA $0400,Y		; also write to the screen
 		STA $0500,Y		; also write to the screen
 		STA $0600,Y		; also write to the screen
@@ -31,27 +31,28 @@ marchU0:STA $0000,Y		; w0 - write the test value
 		INY				; count up
 		BNE marchU0		; repeat until Y overflows back to zero
 
+		STY $00
 ; step 1; up - r0,w1,r1,w0
 ; A contains test value
-marchU1:EOR $0000,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
+marchU1:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
 		EOR #$FF		; invert
-		STA $0000,Y		; w1 - write the inverted test value
-		EOR $0000,Y		; r1 - read the same value back and compare using XOR
+		STA $00,Y		; w1 - write the inverted test value
+		EOR $00,Y		; r1 - read the same value back and compare using XOR
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get a fresh copy of the test value
-		STA $0000,Y		; w0 - write the test value to the memory location
+		STA $00,Y		; w0 - write the test value to the memory location
 		INY				; count up
 		BNE marchU1		; repeat until Y overflows back to zero
 
 ; step 2; up - r0,w1
 ; A contains test value from prev step
-marchU2:EOR $0000,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
+marchU2:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
 		EOR #$FF		; invert
-		STA $0000,Y		; w1 - write the inverted test value
+		STA $00,Y		; w1 - write the inverted test value
 		EOR #$FF		; invert
 		INY				; count up
 		BNE marchU2		; repeat until Y overflows back to zero
@@ -60,24 +61,24 @@ marchU2:EOR $0000,Y		; r0 - read and compare with test value (by XOR'ing with ac
 ; A contains the inverted test value from prev step
 		EOR #$FF		; invert
 		DEY				; decrement Y from 0 to FF
-marchU3:EOR $0000,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
+marchU3:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
-		STA $0000,Y		; w0 - write the test value
-		EOR $0000,Y		; r0 - read the same value back and compare using XOR
+		STA $00,Y		; w0 - write the test value
+		EOR $00,Y		; r0 - read the same value back and compare using XOR
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get a fresh copy of the test value
 		EOR #$FF		; invert
-		STA $0000,Y		; w1 - write the inverted test value
+		STA $00,Y		; w1 - write the inverted test value
 		DEY				; count down
 		BPL marchU3		; repeat until Y overflows back to FF
 
 ; step 4; down - r1,w0
 ; A contains the inverted test value from prev step
-marchU4:EOR $0000,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
+marchU4:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
-		STA $0000,Y		; w0 - write the test value
+		STA $00,Y		; w0 - write the test value
 		DEY				; count down
 		BPL marchU4		; repeat until Y overflows back to FF
 
@@ -138,7 +139,9 @@ beep2lp:DEY 		; extend beep twice as long without adding another loop index
 done:	JMP done	; infinite loop
 
 
-findbit:EOR tst_tbl,X      ;Figure out which bit is bad and store that in X
+; A contains the bits (as 1) that were found to be bad
+; Y contains the address (offset) of the address where bad bit(s) were found
+findbit:; EOR tst_tbl,X      ;Figure out which bit is bad and store that in X
         TAX 
         AND #$FE
         BNE chkbit1
