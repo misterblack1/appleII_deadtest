@@ -19,15 +19,15 @@
 		LDX $C051	; text mode
 		LDX $C054	; page 2 off
 		
-sbeep:	DEY 		; startup beep
+sbeep:		DEY 		; startup beep
 		BNE sbeep
 		LDA $C030	; tick the speaker
 		DEX
 		BNE sbeep
 
-start   LDA #$00
-        LDX #$15
-        LDY #$00
+start   	LDA #$00
+        	LDX #$15
+        	LDY #$00
 
 zp_wr   LDA tst_tbl,X      ;fills up the first 4K with the byte from the memtest pattern
         STA $0000,Y
@@ -61,7 +61,7 @@ zpw_p   DEY 			; wait a bit
 zp_rd   LDA $0000,Y		 ; now checkign to see if the contents of RAM is still good
         CMP tst_tbl,X      ;memtest pattern
         BNE biterr
-		LDA $0100,Y
+	LDA $0100,Y
         CMP tst_tbl,X      ;memtest pattern
         BNE biterr
         LDA $0200,Y
@@ -117,7 +117,7 @@ IE24F   DEX
         LDY #$00
         JMP zp_wr
 
-IE010   ;memtest ok put the RAM test good code here
+IE010   	;memtest ok put the RAM test good code here
 		; Since first 4K is good, we can use Zerp page now
 		; we then use $00,$01 as pointer for video memory 
 		LDA #$00
@@ -128,8 +128,8 @@ IE010   ;memtest ok put the RAM test good code here
 		STA $02
 					; clears the entire screen
 		LDY #$00
-npcl:	LDA #$A0 	; A0 is the black character on the Apple II and II plus
-cls:	STA ($00),Y
+npcl:		LDA #$A0 	; A0 is the black character on the Apple II and II plus
+cls:		STA ($00),Y
 		INY
 		BNE cls
 		INC $01
@@ -194,18 +194,17 @@ chkbit6	TXA
         LDX #$07		 ; bit 6 is bad
         JMP flasherr        ;mem error flash
 
-chkbit7	LDX #$08		 ; bit 7 is bad
+chkbit7		LDX #$08		 ; bit 7 is bad
 		JMP flasherr        ;mem error flash
 
 
 
 flasherr				; time to flash the screen
-						; put the error handling code here
+					; put the error handling code here
 		TXS  			; X is holding the bad bit, save it in the SP
 		LDA $C050 		; turn on graphics
-f_loop	LDA $C057 		; set high res
+f_loop		LDA $C057 		; set high res
 		LDA $C030 		; tick the speaker
-		LDA $C030 		; tick the speaker again as on real hardware you need this twice
 		TXA
 
         LDX #$7F
@@ -215,11 +214,12 @@ f_sp1	DEY
         DEX 
         BNE f_sp1
 
-        TAX				; save A in X
-		LDA $C056 		; set low res
-		TXA				; restore A
+        TAX			; save A in X
+	LDA $C056 		; set low res
+	LDA $C030 		; tick the speaker
+	TXA			; restore A
 
-		LDX #$7F
+	LDX #$7F
         LDY #$00
 f_sp2	DEY 			; wait a bit
         BNE f_sp2
@@ -256,8 +256,8 @@ f_lp4   DEY
         TSX 		; stack pointer is holding bad bit
         JMP f_loop	; flash all over again
 
-print:	LDY #$00	; code to print text to screen
-pnext:	LDA ($10),Y	; pointer to the string
+print:		LDY #$00	; code to print text to screen
+pnext:		LDA ($10),Y	; pointer to the string
 		BEQ pexit	; end of string
 		ORA #$80	; to fix flashing text on Apple II and II+
 		STA ($00),Y	; video memory pointer
@@ -265,32 +265,32 @@ pnext:	LDA ($10),Y	; pointer to the string
 		CPY $00
 		BNE skipv
 		INC $01
-skipv:	INC $10
+skipv:		INC $10
 		CPY $10
 		BNE pnext
 		INC $11
 		JMP pnext
-pexit:	RTS
+pexit:		RTS
 
-beep:	LDY #$A0
-beeplp:	DEY 		; will beep the computer to say things are good
+beep:		LDY #$A0
+beeplp:		DEY 		; will beep the computer to say things are good
 		BNE beeplp
 		LDA $C030	; tick the speaker
 		DEX
 		BNE beep
-beep2:	LDY #$A0
-beep2lp:DEY 		; extend beep twice as long without adding another loop index
+beep2:		LDY #$A0
+beep2lp:	DEY 		; extend beep twice as long without adding another loop index
 		BNE beep2lp
 		LDA $C030	; tick the speaker
 		DEX
 		BNE beep2
 
-done:	JMP done	; infinite loop
+done:		JMP done	; infinite loop
 
 ramok:
 .aasc "FIRST 4K OF RAM GOOD!", 0
 
-tst_tbl   .BYTE $00,$55,$AA,$FF,$01,$02,$04,$08     ; memtest pattern
+tst_tbl .BYTE $00,$55,$AA,$FF,$01,$02,$04,$08     ; memtest pattern
         .BYTE $10,$20,$40,$80,$FE,$FD,$FB,$F7     ; it cycles through all these bytes
         .BYTE $EF,$DF,$BF,$7F                     ; during the test
 
