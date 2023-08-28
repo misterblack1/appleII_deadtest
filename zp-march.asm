@@ -25,6 +25,9 @@ marchU:	LDY #$00
 		TAX				; copy the test value into X
 marchU0:STA $0000,Y		; w0 - write the test value
 		STA $0400,Y		; also write to the screen
+		STA $0500,Y		; also write to the screen
+		STA $0600,Y		; also write to the screen
+		STA $0700,Y		; also write to the screen
 		INY				; count up
 		BNE marchU0		; repeat until Y overflows back to zero
 
