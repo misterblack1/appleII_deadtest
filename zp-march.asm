@@ -143,48 +143,48 @@ done:	JMP done	; infinite loop
 ; Y contains the address (offset) of the address where bad bit(s) were found
 findbit:; EOR tst_tbl,X      ;Figure out which bit is bad and store that in X
         TAX 
-        AND #$FE
-        BNE chkbit1
+        AND #$01
+        BEQ chkbit1
         LDX #$01		 ; bit 0 is bad
         JMP flasherr        ;mem error flash
 
 chkbit1:TXA 
-        AND #$FD
-        BNE chkbit2
+        AND #$02
+        BEQ chkbit2
         LDX #$02		 ; bit 1 is bad
         JMP flasherr        ;mem error flash
 
 chkbit2:TXA 
-        AND #$FB
-        BNE chkbit3
+        AND #$04
+        BEQ chkbit3
         LDX #$03		 ; bit 2 is bad
         JMP flasherr        ;mem error flash
 
 chkbit3:TXA 
-        AND #$F7
-        BNE chkbit4
+        AND #$08
+        BEQ chkbit4
         LDX #$04		 ; bit 3 is bad
         JMP flasherr        ;mem error flash
 
 chkbit4:TXA 
-        AND #$EF
-        BNE chkbit5
+        AND #$10
+        BEQ chkbit5
         LDX #$05		 ; bit 4 is bad
         JMP flasherr        ;mem error flash
 
 chkbit5:TXA 
-        AND #$DF
-        BNE chkbit6
+        AND #$20
+        BEQ chkbit6
         LDX #$06		 ; bit 5 is bad
         JMP flasherr        ;mem error flash
 
 chkbit6:TXA 
-        AND #$BF
-        BNE chkbit7
+        AND #$40
+        BEQ chkbit7
         LDX #$07		 ; bit 6 is bad
         JMP flasherr        ;mem error flash
 
-chkbit7:LDX #$08		 ; bit 7 is bad
+chkbit7:LDX #$80		 ; bit 7 is bad
 		JMP flasherr        ;mem error flash
 
 
@@ -268,10 +268,11 @@ pexit:	RTS
 ramok:
 .aasc "FIRST 4K OF RAM GOOD!", 0
 
+tst_tbl	.BYTE $EE,$77,$80,$40, $20,$10,$08,$04, $02,$01,$A5,$5A, $AA,$55,$FF,$00 ; memtest patterns to cycle through
 
-tst_tbl	.BYTE $00,$55,$AA,$FF,$01,$02,$04,$08     ; memtest pattern
-        .BYTE $10,$20,$40,$80,$FE,$FD,$FB,$F7     ; it cycles through all these bytes
-        .BYTE $EF,$DF,$BF,$7F                     ; during the test
+; tst_tbl	.BYTE $00,$55,$AA,$FF,$01,$02,$04,$08     ; memtest pattern
+;         .BYTE $10,$20,$40,$80,$FE,$FD,$FB,$F7     ; it cycles through all these bytes
+;         .BYTE $EF,$DF,$BF,$7F                     ; during the test
 
 ; end of the code	
 endofrom
