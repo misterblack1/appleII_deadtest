@@ -1,4 +1,5 @@
 SOURCE = apple2-deadtest.asm
+# SOURCE = apple2-deadtest-h.asm
 MAME = $(HOME)/Downloads/mame0257-arm64/mame
 OUTPUT = 341-0020-00.f8
 
