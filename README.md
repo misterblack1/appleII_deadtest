@@ -40,6 +40,8 @@ To use this ROM:
 * Platinum //e has CF ROM which is a 27128 (16K) so you would load this F8 ROM into the top of the chip ($3800)
 * IIc ROM is 27256 (32k) and we have not tested this on the IIc
 
+![ROM adapter in card](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/Screen%20Shot%202023-08-27%20at%207.45.43%20PM.png?raw=true)
+
 To assemble the ROM:
 * Install XA on your computer using some package manager (apt-get xa)
 * Compile it with xa -C apple2-deadtest.asm -o 341-0020-00.f8
