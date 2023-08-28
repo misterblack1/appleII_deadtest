@@ -1,4 +1,10 @@
+#define ROM2K
+
+#ifdef ROM2K
 		* = $F800 ; this is designed to run in a 2K rom on the Apple II/II+
+#else
+    	* = $E000 ; for the IIe and IIc
+#endif
 
 		SEI
 		CLD
@@ -8,7 +14,9 @@
 		; soft switches
 		LDX $C051	; text mode
 		LDX $C054	; page 2 off
-		
+		LDX $C00E	; turn off alt charset on later apple machines
+		LDX $C00C	; turn off 80 col		
+
 sbeep:	DEY 		; startup beep
 		BNE sbeep
 		LDA $C030	; tick the speaker
@@ -283,4 +291,8 @@ endofrom
 ; vectors
 	* = $FFFA
 
-.db $00,$F8,$00,$F8,$00,$F8
+#ifdef ROM2K
+.db $00,$F8,$00,$F8,$00,$F8 ; for the II and II+
+#else
+.db $00,$E0,$00,$E0,$00,$E0 ; for the //e and //c
+#endif
