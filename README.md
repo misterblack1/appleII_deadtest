@@ -1,7 +1,9 @@
-# Apple II Dead Test ROM
-While fixing an Apple II+ clone, I was annoyed there seemed to be no diagnostic ROM for the system that could test the RAM without using RAM.
+# Apple II Dead Test RAM Diagnostic ROM
+Recently while fixing an Apple II+ clone, I was annoyed there seemed to be no diagnostic ROMs available for the Apple II that could test the RAM without using RAM. 
 
-So this ROM is a result of that. I mostly ported the C64 dead test ROM over to the Apple II and replicated the functionality of the initial phase of that ROM. The main thing that makes this test great is it does NOT rely on DRAM at all. It runs entirely inside the ROM and does not use the ZERP PAGE ($00-$FF) or the stack ($100-$1FF.) All the other tests I found use that part of RAM, which isn't helpful if you have bad RAM in that part of the system.
+This ROM is a result of that. I started with a base of the C64 "Dead Test" ROM, porting that over to the Apple II and adjusted the functionality of the initial phase of that ROM. The main thing that makes this test great is it does NOT rely on DRAM at all. It runs entirely inside the ROM and does not use the ZERO PAGE ($00-$FF) or the stack ($100-$1FF.) All the other tests I found use that part of RAM, which isn't helpful if you have bad RAM in that part of the system.
+
+![Success](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/4K-test.png?raw=true)
 
 Note: It does use the ZERO PAGE at the end to print the message about the RAM being good. See below.
 
@@ -30,7 +32,8 @@ Limitations:
 * An indicated bit error from this test does not mean the DRAM is faulty, it means the CPU is unable to correctly see the bit it expects from the DRAM. This could be caused by a bad RAM chip or other faults on the system.
 * The RAM subsystem on the Apple II is more complex than that of other contemporary 8-bit systems of the time, so many components in that subsystem can cause indicated bit errors.
 * The Apple II has a dedicated DRAM output bus that is used to display text/graphics, and this bus is connected to the CPU data bus as needed.
-* Please keep in mind is that it will only flash the first bit it saw as wrong, starting at bit 0. So if you have a chip that has all bits bad, I presume it will only flash 1 time to indicate bit 0. Change that chip and run again.
+* Please keep in mind is that it will only flash the first bit it saw as wrong, starting at bit 7 (8 flashes.) So if you have multiple bad chips, the highest bad bit will usually win and flash. Change that chip and run again.
+* Remember that each bit of DRAM in each bank is parallel with the other banks, so even if the test is running on the first 4K of RAM, you could have a bad chip in an adjacent bank causing a bit error in the first 4K. 
 
 To use this ROM:
 * It is designed to run in the F8 ROM socket on the Apple II, Apple II+ or Apple ROM card.
@@ -38,6 +41,8 @@ To use this ROM:
 * IIe can use a 2764 (8K) that holds EF ROM, so you can load this F8 ROM into the top of the chip ($1800)
 * Platinum //e has CF ROM which is a 27128 (16K) so you would load this F8 ROM into the top of the chip ($3800)
 * IIc ROM is 27256 (32k) and we have not tested this on the IIc
+
+![ROM adapter in card](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/Screen%20Shot%202023-08-27%20at%207.45.43%20PM.png?raw=true)
 
 To assemble the ROM:
 * Install XA on your computer using some package manager (apt-get xa)
