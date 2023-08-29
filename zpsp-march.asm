@@ -30,12 +30,16 @@ sbeep:	DEY 		; startup beep
 start:	LDX #15	
 
 
+		JMP marchU
+zp_bada:JMP zp_bad
+
 ; step 0; up - w0 - write the test value
 marchU:	LDY #$00
 		LDA tst_tbl,X	; get the test value into A
 		TXS				; save the index to the test value into SP
 		TAX				; copy the test value into X
 marchU0:STA $00,Y		; w0 - write the test value
+		STA $0100,Y		;    - also to stack page
 		STA $0400,Y		; also write to the screen
 		STA $0500,Y		; also write to the screen
 		STA $0600,Y		; also write to the screen
@@ -47,14 +51,23 @@ marchU0:STA $00,Y		; w0 - write the test value
 ; step 1; up - r0,w1,r1,w0
 ; A contains test value
 marchU1:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
-		BNE zp_bad		; if bits differ, location is bad
+		BNE zp_bada		; if bits differ, location is bad
+		TXA				; get the test value
+		EOR $0100,Y		; r0s - also stack page
+		BNE zp_bada		; if bits differ, location is bad
 		TXA				; get the test value
 		EOR #$FF		; invert
 		STA $00,Y		; w1 - write the inverted test value
 		EOR $00,Y		; r1 - read the same value back and compare using XOR
+		BNE zp_bada		; if bits differ, location is bad
+		TXA				; get the test value
+		EOR #$FF		; invert
+		STA $0100,Y		; w1s - also stack page
+		EOR $0100,Y		; r1s
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get a fresh copy of the test value
 		STA $00,Y		; w0 - write the test value to the memory location
+		STA $0100,Y		; w0s - also stack page
 		INY				; count up
 		BNE marchU1		; repeat until Y overflows back to zero
 
@@ -63,8 +76,12 @@ marchU1:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accu
 marchU2:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
+		EOR $0100,Y		; r0s  - also stack page
+		BNE zp_bad		; if bits differ, location is bad
+		TXA				; get the test value
 		EOR #$FF		; invert
 		STA $00,Y		; w1 - write the inverted test value
+		STA $0100,Y		; w1s - also stack page
 		EOR #$FF		; invert
 		INY				; count up
 		BNE marchU2		; repeat until Y overflows back to zero
@@ -76,12 +93,21 @@ marchU2:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accu
 marchU3:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
+		EOR #$FF
+		EOR $0100,Y		; r1s - also stack page
+		BNE zp_bad		; if bits differ, location is bad
+		TXA				; get the test value
 		STA $00,Y		; w0 - write the test value
 		EOR $00,Y		; r0 - read the same value back and compare using XOR
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get a fresh copy of the test value
+		STA $0100,Y		; w0s - write the test value
+		EOR $0100,Y		; r0s - read the same value back and compare using XOR
+		BNE zp_bad		; if bits differ, location is bad
+		TXA				; get a fresh copy of the test value
 		EOR #$FF		; invert
 		STA $00,Y		; w1 - write the inverted test value
+		STA $0100,Y		; w1s - also stack page
 		DEY				; count down
 		BPL marchU3		; repeat until Y overflows back to FF
 
@@ -90,14 +116,23 @@ marchU3:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing 
 marchU4:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
+		EOR #$FF		; invert
+		EOR $0100,Y		; r1s - read and compare with inverted test value (by XOR'ing with accumulator)
+		BNE zp_bad		; if bits differ, location is bad
+		TXA				; get the test value
 		STA $00,Y		; w0 - write the test value
+		STA $0100,Y		; w0s - also stack page
 		DEY				; count down
 		BPL marchU4		; repeat until Y overflows back to FF
 
 		TSX				; recover the test value index from SP
 		DEX				; choose the next one
-		BPL marchU		; start again with next value
+		BPL marchup		; start again with next value
 		JMP zp_good
+
+marchup:
+		JMP marchU
+
 
 ; zp_bad; Y will equal the current pointer, A will have the bits that differ
 zp_bad:

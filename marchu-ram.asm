@@ -6,6 +6,15 @@
     	* = $E000 ; for the IIe and IIc
 #endif
 
+#define MEMTEST_START $0200
+#define MEMTEST_END $0FFF
+
+p_cur	= $10
+p_start	= $12
+p_end	= $13
+testidx = $14
+testval = $15
+
 		SEI
 		CLD
 		LDX #$FF
@@ -27,19 +36,25 @@ sbeep:	DEY 		; startup beep
 		DEX
 		BNE sbeep
 
-start:	LDX #15	
+start:	LDA #15						; number of test values
+		STA testidx
 
+		LDA #<MEMTEST_START			; set up the pointers
+		STA p_cur
+		LDA #>MEMTEST_START
+		STA p_cur+1
+		STA p_start
+		LDA #>MEMTEST_END
+		STA p_end
 
 ; step 0; up - w0 - write the test value
 marchU:	LDY #$00
+		LDX testidx		; get the index to the test value pages
 		LDA tst_tbl,X	; get the test value into A
-		TXS				; save the index to the test value into SP
-		TAX				; copy the test value into X
-marchU0:STA $00,Y		; w0 - write the test value
-		STA $0400,Y		; also write to the screen
-		STA $0500,Y		; also write to the screen
-		STA $0600,Y		; also write to the screen
-		STA $0700,Y		; also write to the screen
+		STA testval		; save the test value to a variable
+
+marchU0:STA (p_cur),Y	; w0 - write the test value
+		INC p_cur		; count up
 		INY				; count up
 		BNE marchU0		; repeat until Y overflows back to zero
 
