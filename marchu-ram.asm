@@ -336,12 +336,6 @@ beep:	STA $C030		; tick the speaker
 		BNE bit_loop
 		TSX	
 		JMP byte_loop
-
-; f_lp:	LDX #$00		; a long pause between flashes
-;         LDY #$00
-; 		XYdelay 4
-;         TSX 			; stack pointer is holding bad bit
-;         JMP bit_loop		; flash all over again
 .endproc
 
 print:	LDY #$00	; code to print text to screen
