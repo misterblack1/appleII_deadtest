@@ -88,8 +88,8 @@ zp_badj:JMP zp_bad
 		CMP pg_end		; compare with (one page past) the last page
 		BNE step0		; if not there yet, loop again
 
-		LDA #$08		; simulate error
-		JMP zp_bad
+		; LDA #$08		; simulate error
+		; JMP zp_bad
 
 ; step 1; up - r0,w1,r1,w0
 		LDA pg_start	; set up the starting page again for next stage
@@ -191,8 +191,8 @@ zp_bad:
 		JMP findbit
 
 zp_good:
-		LDA #$08		; simulate error
-		JMP zp_bad
+		; LDA #$08		; simulate error
+		; JMP zp_bad
 		; memtest ok put the RAM test good code here
 		; Since first 4K is good, we can use Zero page now
 		; we then use $00,$01 as pointer for video memory 
@@ -364,8 +364,8 @@ pexit:	RTS
 ramok:	.asciiz "RAM OK. PUSH SHIFT TO RUN AGAIN."
 
 	; memtest patterns to cycle through
-; tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $A5,$5A,$FF,$00 
-tst_tbl:.BYTE $FF ; while debugging, shorten the test value list
+tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $A5,$5A,$FF,$00 
+; tst_tbl:.BYTE $FF ; while debugging, shorten the test value list
 	tst_tbl_end = *
 
 ; end of the code	
