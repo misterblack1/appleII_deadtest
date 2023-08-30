@@ -1,20 +1,20 @@
-#define ROM2K
+	ROM2K = 1
+.ifdef ROM2K
+	.org $F800	; this is designed to run in a 2K rom on the Apple II/II+
+.else
+    .org $E000	; for the IIe and IIc
+.endif
+	ROMSTART = *
 
-#ifdef ROM2K
-		* = $F800 ; this is designed to run in a 2K rom on the Apple II/II+
-#else
-    	* = $E000 ; for the IIe and IIc
-#endif
-
-#define MEMTEST_START $0200
-#define MEMTEST_END $C000
+	MEMTEST_START = $0200
+	MEMTEST_END = $C000
 ; test will end one byte before MEMTEST_END
 
-ptr_cur	= $10
-pg_cur	= $11
-pg_start= $12
-pg_end	= $13
-testidx = $14
+	ptr_cur	= $10
+	pg_cur	= $11
+	pg_start= $12
+	pg_end	= $13
+	testidx = $14
 
 		SEI
 		CLD
@@ -36,17 +36,21 @@ testidx = $14
 		LDX $C062 ; read button 2
 		LDX $C063 ; read button 3
 
+		LDX #$20
+sbeepo: LDY #$C0		
 sbeep:	DEY 		; startup beep
 		BNE sbeep
 		LDA $C030	; tick the speaker
 		DEX
-		BNE sbeep
+		BNE sbeepo
 
-		JMP start
+		JMP marchU
 
 zp_badj:JMP zp_bad
 
-start:	LDA #(tst_tbl_end-tst_tbl)	; number of test values
+
+.proc 	marchU
+		LDA #(tst_tbl_end-tst_tbl)	; number of test values
 		STA testidx
 
 		LDA #<MEMTEST_START			; set up the pointers
@@ -56,7 +60,8 @@ start:	LDA #(tst_tbl_end-tst_tbl)	; number of test values
 		LDA #>MEMTEST_END
 		STA pg_end
 
-marchU:	LDY #$00		; Y will be the pointer into the page
+	init:	
+		LDY #$00		; Y will be the pointer into the page
 		LDX testidx		; get the index to the test value pages
 		LDA tst_tbl,X	; get the test value into A
 		TAX				; X will contain the test val throughout marchU
@@ -72,20 +77,25 @@ marchU:	LDY #$00		; Y will be the pointer into the page
 ;	w1:		write the inverted test value to current location
 
 ; step 0; up - w0 - write the test value
-marchU0:TXA				; get the test value
+	step0:	
+		TXA				; get the test value
 		STA (ptr_cur),Y; w0 - write the test value to current location
 		INY				; count up
-		BNE marchU0		; repeat until Y overflows back to zero (do the whole page)
+		BNE step0		; repeat until Y overflows back to zero (do the whole page)
 
 		INC pg_cur		; increment the page
 		LDA pg_cur
 		CMP pg_end		; compare with (one page past) the last page
-		BNE marchU0		; if not there yet, loop again
+		BNE step0		; if not there yet, loop again
+
+		LDA #$08		; simulate error
+		JMP zp_bad
 
 ; step 1; up - r0,w1,r1,w0
 		LDA pg_start	; set up the starting page again for next stage
 		STA pg_cur
-marchU1:TXA				; get the test value
+	step1:	
+		TXA				; get the test value
 		EOR (ptr_cur),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE zp_badj		; if bits differ, location is bad
 		TXA				; get the test value
@@ -96,35 +106,37 @@ marchU1:TXA				; get the test value
 		TXA				; get the test value
 		STA (ptr_cur),Y	; w0 - write the test value to the memory location
 		INY				; count up
-		BNE marchU1		; repeat until Y overflows back to zero
+		BNE step1		; repeat until Y overflows back to zero
 
 		INC pg_cur		; increment the page
 		LDA pg_cur
 		CMP pg_end		; compare with (one page past) the last page
-		BNE marchU1		; if not there yet, loop again
+		BNE step1		; if not there yet, loop again
 
 ; step 2; up - r0,w1
 		LDA pg_start	; set up the starting page again for next stage
 		STA pg_cur
-marchU2:TXA				; get the test value
+	step2:	
+		TXA				; get the test value
 		EOR (ptr_cur),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
 		EOR #$FF		; invert
 		STA (ptr_cur),Y	; w1 - write the inverted test value
 		INY				; count up
-		BNE marchU2		; repeat until Y overflows back to zero
+		BNE step2		; repeat until Y overflows back to zero
 
 		INC pg_cur		; increment the page
 		LDA pg_cur
 		CMP pg_end		; compare with (one page past) the last page
-		BNE marchU2		; if not there yet, loop again
+		BNE step2		; if not there yet, loop again
 
 ; step 3; down - r1,w0,r0,w1
 		LDA pg_end
 		STA pg_cur
 		DEC pg_cur		; start at the end page minus one
-marchU3:DEY				; pre-decrement (because counting down works differently)
+	step3:	
+		DEY				; pre-decrement (because counting down works differently than counting up)
 		TXA				; get the test value
 		EOR #$FF		; invert
 		EOR (ptr_cur),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
@@ -138,18 +150,19 @@ marchU3:DEY				; pre-decrement (because counting down works differently)
 		STA (ptr_cur),Y	; w1 - write the inverted test value
 		DEY				; determine if we are at offset zero
 		INY
-		BNE marchU3		; repeat until Y overflows back to FF
+		BNE step3		; repeat until Y overflows back to FF
 
 		DEC pg_cur		; decrement the page
 		LDA pg_cur
 		CMP pg_start	; compare with the first page, which can't be zero
-		BCS marchU3		; if not there yet (pg_cur>=pg_start so carry set), loop again
+		BCS step3		; if not there yet (pg_cur>=pg_start so carry set), loop again
 
 ; step 4; down - r1,w0
 		LDA pg_end
 		STA pg_cur
 		DEC pg_cur		; start at the end page minus one
-marchU4:DEY
+	step4:	
+		DEY				; pre-decrement (because counting down works differently than counting up)
 		TXA				; get the test value
 		EOR #$FF		; invert
 		EOR (ptr_cur),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
@@ -158,26 +171,29 @@ marchU4:DEY
 		STA (ptr_cur),Y	; w0 - write the test value
 		DEY				; determine if we are at offset zero
 		INY
-		BNE marchU4		; repeat until Y overflows back to FF
+		BNE step4		; repeat until Y overflows back to FF
 
 		DEC pg_cur		; decrement the page
 		LDA pg_cur
 		CMP pg_start	; compare with the first page, which can't be zero
-		BCS marchU4		; if not there yet (pg_cur>=pg_start so carry set), loop again
+		BCS step4		; if not there yet (pg_cur>=pg_start so carry set), loop again
 
 ; now, determine whether to repeat with a new test value
-		; DEX				; choose the next one
 		LDX testidx
 		DEX
 		STX testidx
 		BMI zp_good		; start again with next value if we didn't go past zero
-		JMP marchU
+		JMP init
+.endproc
 
 ; zp_bad; Y will equal the current pointer, A will have the bits that differ
 zp_bad:
 		JMP findbit
 
-zp_good:; memtest ok put the RAM test good code here
+zp_good:
+		LDA #$08		; simulate error
+		JMP zp_bad
+		; memtest ok put the RAM test good code here
 		; Since first 4K is good, we can use Zero page now
 		; we then use $00,$01 as pointer for video memory 
 		LDX $C051	; text mode
@@ -242,77 +258,91 @@ again:	; user pushed a button or shift, so re-run the test
         LDA $C057 		; set high res
 		LDA $C053		; mixed mode on
 
-		JMP start 
+		JMP marchU 
 
 
 ; A contains the bits (as 1) that were found to be bad
 ; Y contains the address (offset) of the address where bad bit(s) were found
-findbit:LDX #8			; start at high bit
+.proc findbit
+		LDX #8			; start at high bit
 		CLC				; clear carry
-chkbit:	ROL				; move tested bit into carry
+	chkbit:	
+		ROL				; move tested bit into carry
 		BCS flasherr	; bit set, display it
 		DEX				; count down
 		BNE chkbit		; test next bit
-wha:	JMP wha			; should not get here?
-	
+	oops:	
+		JMP oops			; should not get here?
+.endproc
 
-flasherr:				; time to flash the screen
-						; put the error handling code here
+.macro XYdelay count
+	.if .blank(count)
+	.else
+		.repeat count
+	.endif
+:		DEY 
+        BNE :-
+        DEX 
+        BNE :-
+	.if .blank(count)
+	.else
+		.endrepeat
+	.endif
+.endmacro
+
+.proc flasherr			; time to flash the screen
 		TXS  			; X is holding the bad bit, save it in the SP
+
+	byte_loop:
+		LDA $C051		; text mode
+		LDX #$00		; a long pause at beginning and between flashes
+        LDY #$00
+		XYdelay 4
+		TSX	
+	bit_loop:
 		LDA $C050 		; turn on graphics
-f_loop:	LDA $C057 		; set high res
+		LDA $C057 		; set high res
 		LDA $C030 		; tick the speaker
 		LDA $C030		; tick the speaker again as on real hardware you need this twice
-		TXA
+		TXA				; save bit counter in A
 
-        LDX #$7F
-        LDY #$00
-f_sp1:	DEY 
-        BNE f_sp1
-        DEX 
-        BNE f_sp1
+        ; LDX #$7F		; pause with hi res on
+        ; LDY #$00
+		; XYdelay
 
-        TAX				; save A in X
-		LDA $C056 		; set low res
+		LDX #$80
+		LDY #$FF		; low beep for bad bit
+beep:	STA $C030		; tick the speaker
+:		DEY 			
+		BNE :-
+:		DEY 			
+		BNE :-
+		DEX
+		BNE beep
+
+
+        TAX				; move bit counter back to X
+		LDA $C051		; text mode
+		; LDA $C056 		; set low res
 		LDA $C030 		; tick the speaker
-		TXA				; restore A
+		TXA				; save bit counter in A
 
-		LDX #$7F
+		LDX #$7F		; pause with low res on
         LDY #$00
-f_sp2:	DEY 			; wait a bit
-        BNE f_sp2
-        DEX 
-        BNE f_sp2
-f_sp3:	DEY 			; wait a bit again
-        BNE f_sp3
-        DEX 
-        BNE f_sp3
+		XYdelay 2
 
-        TAX 
+        TAX				; move bit counter back to X
         DEX 
-        BEQ f_lp
-        JMP f_loop
+		BNE bit_loop
+		TSX	
+		JMP byte_loop
 
-f_lp:	LDX #$00		; a long pause between flashes
-        LDY #$00
-f_lp1:	DEY 
-        BNE f_lp1
-        DEX 
-        BNE f_lp1
-f_lp2:	DEY 
-        BNE f_lp2
-        DEX 
-        BNE f_lp2
-f_lp3:	DEY 
-        BNE f_lp3
-        DEX 
-        BNE f_lp3
-f_lp4:	DEY 
-        BNE f_lp4
-        DEX 
-        BNE f_lp4
-        TSX 		; stack pointer is holding bad bit
-        JMP f_loop	; flash all over again
+; f_lp:	LDX #$00		; a long pause between flashes
+;         LDY #$00
+; 		XYdelay 4
+;         TSX 			; stack pointer is holding bad bit
+;         JMP bit_loop		; flash all over again
+.endproc
 
 print:	LDY #$00	; code to print text to screen
 pnext:	LDA ($10),Y	; pointer to the string
@@ -331,29 +361,20 @@ skipv:	INC $10
 pexit:	RTS
 
 
+ramok:	.asciiz "RAM OK. PUSH SHIFT TO RUN AGAIN."
 
-ramok:
-.aasc "RAM OK. PUSH SHIFT TO RUN AGAIN.", 0
-
-; tst_tbl	.BYTE $EE,$77,$80,$40, $20,$10,$08,$04, $02,$01,$A5,$5A, $AA,$55,$FF,$00 ; memtest patterns to cycle through
-tst_tbl	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $A5,$5A,$FF,$00 ; memtest patterns to cycle through
-tst_tbl_end = *
-
-; tst_tbl	.BYTE $00,$55,$AA,$FF,$01,$02,$04,$08     ; memtest pattern
-;         .BYTE $10,$20,$40,$80,$FE,$FD,$FB,$F7     ; it cycles through all these bytes
-;         .BYTE $EF,$DF,$BF,$7F                     ; during the test
+	; memtest patterns to cycle through
+; tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $A5,$5A,$FF,$00 
+tst_tbl:.BYTE $FF ; while debugging, shorten the test value list
+	tst_tbl_end = *
 
 ; end of the code	
-endofrom
+	endofrom = *
 ; fills the unused space with $FF 
-        * = $FFFA
-.dsb (*-endofrom), $FF
+	.res ($FFFA-endofrom), $A5
 
 ; vectors
-	* = $FFFA
+	.org $FFFA
+	.word	ROMSTART,ROMSTART,ROMSTART
 
-#ifdef ROM2K
-.db $00,$F8,$00,$F8,$00,$F8 ; for the II and II+
-#else
-.db $00,$E0,$00,$E0,$00,$E0 ; for the //e and //c
-#endif
+; code: language=ca65

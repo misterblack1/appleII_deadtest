@@ -1,2 +1,4 @@
 roms/
 cfg/
+*.lst
+*.o
