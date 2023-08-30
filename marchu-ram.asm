@@ -7,11 +7,13 @@
 #endif
 
 #define MEMTEST_START $0200
-#define MEMTEST_END $0FFF
+#define MEMTEST_END $C000
+; test will end one byte before MEMTEST_END
 
-p_cur	= $10
-p_start	= $12
-p_end	= $13
+ptr_cur	= $10
+pg_cur	= $11
+pg_start= $12
+pg_end	= $13
 testidx = $14
 testval = $15
 
@@ -21,8 +23,12 @@ testval = $15
 		TXS		; initialize the stack pointer
 		
 		; soft switches
-		LDX $C051	; text mode
-		LDX $C054	; page 2 off
+		; LDX $C051	; text mode
+		; LDX $C054	; page 2 off
+
+		LDA $C050 		; turn on graphics
+        LDA $C057 		; set high res
+
 		LDX $C00E	; turn off alt charset on later apple machines
 		LDX $C00C	; turn off 80 col
 
@@ -36,83 +42,126 @@ sbeep:	DEY 		; startup beep
 		DEX
 		BNE sbeep
 
+		JMP start
+
+zp_badj:JMP zp_bad
+
 start:	LDA #15						; number of test values
 		STA testidx
 
 		LDA #<MEMTEST_START			; set up the pointers
-		STA p_cur
+		STA ptr_cur
 		LDA #>MEMTEST_START
-		STA p_cur+1
-		STA p_start
+		STA pg_start		
 		LDA #>MEMTEST_END
-		STA p_end
+		STA pg_end
 
-; step 0; up - w0 - write the test value
-marchU:	LDY #$00
+marchU:	LDY #$00		; Y will be the pointer into the page
 		LDX testidx		; get the index to the test value pages
 		LDA tst_tbl,X	; get the test value into A
 		STA testval		; save the test value to a variable
+		LDA pg_start
+		STA pg_cur
 
-marchU0:STA (p_cur),Y	; w0 - write the test value
-		INC p_cur		; count up
+; step 0; up - w0 - write the test value
+marchU0:LDA testval		; get the value to write
+		STA (ptr_cur),Y; w0 - write the test value to current location
 		INY				; count up
-		BNE marchU0		; repeat until Y overflows back to zero
+		BNE marchU0		; repeat until Y overflows back to zero (do the whole page)
 
-		; STY $00			; intentionally create an error for testing
+		INC pg_cur		; increment the page
+		LDA pg_cur
+		CMP pg_end		; compare with (one page past) the last page
+		BNE marchU0		; if not there yet, loop again
+
 ; step 1; up - r0,w1,r1,w0
-; A contains test value
-marchU1:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
-		BNE zp_bad		; if bits differ, location is bad
-		TXA				; get the test value
+		LDA pg_start	; set up the starting page again for next stage
+		STA pg_cur
+marchU1:LDA testval
+		EOR (ptr_cur),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
+		BNE zp_badj		; if bits differ, location is bad
+		LDA testval
 		EOR #$FF		; invert
-		STA $00,Y		; w1 - write the inverted test value
-		EOR $00,Y		; r1 - read the same value back and compare using XOR
-		BNE zp_bad		; if bits differ, location is bad
-		TXA				; get a fresh copy of the test value
-		STA $00,Y		; w0 - write the test value to the memory location
+		STA (ptr_cur),Y	; w1 - write the inverted test value
+		EOR (ptr_cur),Y	; r1 - read the same value back and compare using XOR
+		BNE zp_badj		; if bits differ, location is bad
+		LDA testval
+		STA (ptr_cur),Y	; w0 - write the test value to the memory location
 		INY				; count up
 		BNE marchU1		; repeat until Y overflows back to zero
 
+		INC pg_cur		; increment the page
+		LDA pg_cur
+		CMP pg_end		; compare with (one page past) the last page
+		BNE marchU1		; if not there yet, loop again
+
 ; step 2; up - r0,w1
-; A contains test value from prev step
-marchU2:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
+		LDA pg_start	; set up the starting page again for next stage
+		STA pg_cur
+marchU2:LDA testval
+		EOR (ptr_cur),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
-		TXA				; get the test value
+		LDA testval
 		EOR #$FF		; invert
-		STA $00,Y		; w1 - write the inverted test value
-		EOR #$FF		; invert
+		STA (ptr_cur),Y	; w1 - write the inverted test value
 		INY				; count up
 		BNE marchU2		; repeat until Y overflows back to zero
 
+		INC pg_cur		; increment the page
+		LDA pg_cur
+		CMP pg_end		; compare with (one page past) the last page
+		BNE marchU2		; if not there yet, loop again
+
 ; step 3; down - r1,w0,r0,w1
-; A contains the inverted test value from prev step
+		LDA pg_end
+		STA pg_cur
+		DEC pg_cur		; start at the end page minus one
+marchU3:DEY				; pre-decrement (because counting down works differently)
+		LDA testval
 		EOR #$FF		; invert
-		DEY				; decrement Y from 0 to FF
-marchU3:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
+		EOR (ptr_cur),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
-		TXA				; get the test value
-		STA $00,Y		; w0 - write the test value
-		EOR $00,Y		; r0 - read the same value back and compare using XOR
+		LDA testval
+		STA (ptr_cur),Y	; w0 - write the test value
+		EOR (ptr_cur),Y	; r0 - read the same value back and compare using XOR
 		BNE zp_bad		; if bits differ, location is bad
-		TXA				; get a fresh copy of the test value
+		LDA testval		; get a fresh copy of the test value
 		EOR #$FF		; invert
-		STA $00,Y		; w1 - write the inverted test value
-		DEY				; count down
-		BPL marchU3		; repeat until Y overflows back to FF
+		STA (ptr_cur),Y	; w1 - write the inverted test value
+		DEY				; determine if we are at offset zero
+		INY
+		BNE marchU3		; repeat until Y overflows back to FF
+
+		DEC pg_cur		; decrement the page
+		LDA pg_cur
+		CMP pg_start	; compare with the first page, which can't be zero
+		BCS marchU3		; if not there yet (pg_cur>=pg_start so carry set), loop again
 
 ; step 4; down - r1,w0
-; A contains the inverted test value from prev step
-marchU4:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
+		LDA pg_end
+		STA pg_cur
+		DEC pg_cur		; start at the end page minus one
+marchU4:DEY
+		LDA testval
+		EOR #$FF		; invert
+		EOR (ptr_cur),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
-		TXA				; get the test value
-		STA $00,Y		; w0 - write the test value
-		DEY				; count down
-		BPL marchU4		; repeat until Y overflows back to FF
+		LDA testval		; get the test value
+		STA (ptr_cur),Y	; w0 - write the test value
+		DEY				; determine if we are at offset zero
+		INY
+		BNE marchU4		; repeat until Y overflows back to FF
 
-		TSX				; recover the test value index from SP
+		DEC pg_cur		; decrement the page
+		LDA pg_cur
+		CMP pg_start	; compare with the first page, which can't be zero
+		BCS marchU4		; if not there yet (pg_cur>=pg_start so carry set), loop again
+
+; now, determine whether to repeat with a new test value
 		DEX				; choose the next one
-		BPL marchU		; start again with next value
-		JMP zp_good
+		STX testidx
+		BMI zp_good		; start again with next value if we didn't go past zero
+		JMP marchU
 
 ; zp_bad; Y will equal the current pointer, A will have the bits that differ
 zp_bad:
@@ -121,6 +170,9 @@ zp_bad:
 zp_good:; memtest ok put the RAM test good code here
 		; Since first 4K is good, we can use Zero page now
 		; we then use $00,$01 as pointer for video memory 
+		LDX $C051	; text mode
+		LDX $C054	; page 2 off
+
 		LDA #$00
 		STA $00
 		LDA #$04	
@@ -174,8 +226,12 @@ done:
 		AND #$80
 		BNE again
 		JMP done	; infinite loop
-again:
-		JMP start ; user pushed a button or shift, so re-run the test
+		
+again:	; user pushed a button or shift, so re-run the test
+		LDA $C050 		; turn on graphics
+        LDA $C057 		; set high res
+
+		JMP start 
 
 
 ; A contains the bits (as 1) that were found to be bad
@@ -266,7 +322,7 @@ pexit:	RTS
 
 
 ramok:
-.aasc "ZERO PAGE SEEMS GOOD. PUSH SHIFT TO RUN AGAIN.", 0
+.aasc "RAM OK. PUSH SHIFT TO RUN AGAIN.", 0
 
 tst_tbl	.BYTE $EE,$77,$80,$40, $20,$10,$08,$04, $02,$01,$A5,$5A, $AA,$55,$FF,$00 ; memtest patterns to cycle through
 

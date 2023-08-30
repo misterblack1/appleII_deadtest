@@ -1,13 +1,17 @@
 # SOURCE = apple2-deadtest.asm
 # SOURCE = apple2-deadtest-h.asm
-SOURCE = zp-march.asm
+# SOURCE = zp-march.asm
+# SOURCE = zpsp-march.asm
+# SOURCE = march-highres.asm
+SOURCE = marchu-ram.asm
+
 MAME = $(HOME)/Downloads/mame0257-arm64/mame
 OUTPUT = 341-0020-00.f8
 
 all: $(OUTPUT)
 
 $(OUTPUT): $(SOURCE) Makefile
-	xa -C -o $(OUTPUT) $(SOURCE)
+	xa -C -M -o $(OUTPUT) $(SOURCE)
 
 debug: $(OUTPUT)
 	$(MAME) apple2p -keepaspect -volume -10 -window -resolution 800x600 -skip_gameinfo -debug -debugger osx

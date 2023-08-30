@@ -72,8 +72,8 @@ marchU2:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accu
 ; step 3; down - r1,w0,r0,w1
 ; A contains the inverted test value from prev step
 		EOR #$FF		; invert
-		DEY				; decrement Y from 0 to FF
-marchU3:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
+marchU3:DEY				; decrement Y from 0 to FF
+		EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
 		STA $00,Y		; w0 - write the test value
@@ -83,16 +83,19 @@ marchU3:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing 
 		EOR #$FF		; invert
 		STA $00,Y		; w1 - write the inverted test value
 		DEY				; count down
-		BPL marchU3		; repeat until Y overflows back to FF
+		INY
+		BCS marchU3		; repeat until Y overflows back to FF
 
 ; step 4; down - r1,w0
 ; A contains the inverted test value from prev step
-marchU4:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
+marchU4:DEY
+		EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
 		STA $00,Y		; w0 - write the test value
 		DEY				; count down
-		BPL marchU4		; repeat until Y overflows back to FF
+		INY
+		BCS marchU4		; repeat until Y overflows back to FF
 
 		TSX				; recover the test value index from SP
 		DEX				; choose the next one
