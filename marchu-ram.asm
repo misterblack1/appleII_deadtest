@@ -15,7 +15,6 @@ pg_cur	= $11
 pg_start= $12
 pg_end	= $13
 testidx = $14
-testval = $15
 
 		SEI
 		CLD
@@ -28,6 +27,7 @@ testval = $15
 
 		LDA $C050 		; turn on graphics
         LDA $C057 		; set high res
+		LDA $C053		; mixed mode on
 
 		LDX $C00E	; turn off alt charset on later apple machines
 		LDX $C00C	; turn off 80 col
@@ -46,7 +46,7 @@ sbeep:	DEY 		; startup beep
 
 zp_badj:JMP zp_bad
 
-start:	LDA #15						; number of test values
+start:	LDA #(tst_tbl_end-tst_tbl)	; number of test values
 		STA testidx
 
 		LDA #<MEMTEST_START			; set up the pointers
@@ -59,12 +59,20 @@ start:	LDA #15						; number of test values
 marchU:	LDY #$00		; Y will be the pointer into the page
 		LDX testidx		; get the index to the test value pages
 		LDA tst_tbl,X	; get the test value into A
-		STA testval		; save the test value to a variable
+		TAX				; X will contain the test val throughout marchU
 		LDA pg_start
 		STA pg_cur
 
+; In the descriptions below:
+;	up: 	perform the test from low addresses to high ones
+; 	down:	perform the test from high addresses to low ones
+;	r0:		read the current location, compare to the test value, fail if different
+;	r1:		read the current location, compare to the inverted test value, fail if different
+;	w0:		write the test value to current location
+;	w1:		write the inverted test value to current location
+
 ; step 0; up - w0 - write the test value
-marchU0:LDA testval		; get the value to write
+marchU0:TXA				; get the test value
 		STA (ptr_cur),Y; w0 - write the test value to current location
 		INY				; count up
 		BNE marchU0		; repeat until Y overflows back to zero (do the whole page)
@@ -77,15 +85,15 @@ marchU0:LDA testval		; get the value to write
 ; step 1; up - r0,w1,r1,w0
 		LDA pg_start	; set up the starting page again for next stage
 		STA pg_cur
-marchU1:LDA testval
+marchU1:TXA				; get the test value
 		EOR (ptr_cur),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE zp_badj		; if bits differ, location is bad
-		LDA testval
+		TXA				; get the test value
 		EOR #$FF		; invert
 		STA (ptr_cur),Y	; w1 - write the inverted test value
 		EOR (ptr_cur),Y	; r1 - read the same value back and compare using XOR
 		BNE zp_badj		; if bits differ, location is bad
-		LDA testval
+		TXA				; get the test value
 		STA (ptr_cur),Y	; w0 - write the test value to the memory location
 		INY				; count up
 		BNE marchU1		; repeat until Y overflows back to zero
@@ -98,10 +106,10 @@ marchU1:LDA testval
 ; step 2; up - r0,w1
 		LDA pg_start	; set up the starting page again for next stage
 		STA pg_cur
-marchU2:LDA testval
+marchU2:TXA				; get the test value
 		EOR (ptr_cur),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
-		LDA testval
+		TXA				; get the test value
 		EOR #$FF		; invert
 		STA (ptr_cur),Y	; w1 - write the inverted test value
 		INY				; count up
@@ -117,15 +125,15 @@ marchU2:LDA testval
 		STA pg_cur
 		DEC pg_cur		; start at the end page minus one
 marchU3:DEY				; pre-decrement (because counting down works differently)
-		LDA testval
+		TXA				; get the test value
 		EOR #$FF		; invert
 		EOR (ptr_cur),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
-		LDA testval
+		TXA				; get the test value
 		STA (ptr_cur),Y	; w0 - write the test value
 		EOR (ptr_cur),Y	; r0 - read the same value back and compare using XOR
 		BNE zp_bad		; if bits differ, location is bad
-		LDA testval		; get a fresh copy of the test value
+		TXA				; get the test value
 		EOR #$FF		; invert
 		STA (ptr_cur),Y	; w1 - write the inverted test value
 		DEY				; determine if we are at offset zero
@@ -142,11 +150,11 @@ marchU3:DEY				; pre-decrement (because counting down works differently)
 		STA pg_cur
 		DEC pg_cur		; start at the end page minus one
 marchU4:DEY
-		LDA testval
+		TXA				; get the test value
 		EOR #$FF		; invert
 		EOR (ptr_cur),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
-		LDA testval		; get the test value
+		TXA				; get the test value
 		STA (ptr_cur),Y	; w0 - write the test value
 		DEY				; determine if we are at offset zero
 		INY
@@ -158,7 +166,9 @@ marchU4:DEY
 		BCS marchU4		; if not there yet (pg_cur>=pg_start so carry set), loop again
 
 ; now, determine whether to repeat with a new test value
-		DEX				; choose the next one
+		; DEX				; choose the next one
+		LDX testidx
+		DEX
 		STX testidx
 		BMI zp_good		; start again with next value if we didn't go past zero
 		JMP marchU
@@ -226,10 +236,11 @@ done:
 		AND #$80
 		BNE again
 		JMP done	; infinite loop
-		
+
 again:	; user pushed a button or shift, so re-run the test
 		LDA $C050 		; turn on graphics
         LDA $C057 		; set high res
+		LDA $C053		; mixed mode on
 
 		JMP start 
 
@@ -324,7 +335,9 @@ pexit:	RTS
 ramok:
 .aasc "RAM OK. PUSH SHIFT TO RUN AGAIN.", 0
 
-tst_tbl	.BYTE $EE,$77,$80,$40, $20,$10,$08,$04, $02,$01,$A5,$5A, $AA,$55,$FF,$00 ; memtest patterns to cycle through
+; tst_tbl	.BYTE $EE,$77,$80,$40, $20,$10,$08,$04, $02,$01,$A5,$5A, $AA,$55,$FF,$00 ; memtest patterns to cycle through
+tst_tbl	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $A5,$5A,$FF,$00 ; memtest patterns to cycle through
+tst_tbl_end = *
 
 ; tst_tbl	.BYTE $00,$55,$AA,$FF,$01,$02,$04,$08     ; memtest pattern
 ;         .BYTE $10,$20,$40,$80,$FE,$FD,$FB,$F7     ; it cycles through all these bytes
