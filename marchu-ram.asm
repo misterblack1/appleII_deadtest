@@ -293,6 +293,81 @@ again:	; user pushed a button or shift, so re-run the test
 .proc flasherr			; time to flash the screen
 		TXS  			; X is holding the bad bit, save it in the SP
 
+		; XXX HACK: print the bank number on the bottom line
+		; clear the bottom lines
+		LDA $C051		; text mode
+		LDX $C054	; page 2 off
+
+		LDA #$A0	 	; A0 is the black character on the Apple II and II plus
+
+		LDY $FF
+	:	DEY
+		STA $0400,Y		
+		STA $0500,Y		
+		STA $0600,Y		
+		STA $0700,Y		
+		BNE :-
+
+	; 	LDY $28
+	; :	DEY
+	; 	STA $0750,Y		; write the line
+	; 	BNE :-
+
+		LDY #0			; print the bad bank message
+	saybad:
+		LDA bad_msg,Y
+		BEQ :+
+		ORA #$80
+		STA $07D0,Y
+		INY
+		JMP saybad
+	:
+
+		LDA pg_cur
+
+		CLC				; get the top 3 bits as the bank number
+		CLC
+		CLC
+		CLC
+		CLC
+		CLC
+		
+		AND #$03			; get only the low 3 bits
+
+		CLC
+		TAX
+		LDA hex_tbl,X
+		ORA #$80
+
+		STA $07D0+bad_msg_len
+
+		TSX					; get the bat bits mask from the sp
+		TXA
+		AND #$0F			; get low nybble
+		TAY
+		LDA hex_tbl,Y
+		STA $07D5
+		TXA
+		ROR
+		ROR
+		ROR
+		ROR
+		AND #$0F			; get low nybble
+		TAY
+		LDA hex_tbl,Y
+		STA $07D4
+
+	; 	LDY $28
+	; :	DEY
+	; 	STA $06D0,Y		; write the line
+	; 	BNE :-
+
+	; 	LDY $28
+	; :	DEY
+	; 	STA $0650,Y		; write the line
+	; 	BNE :-
+		
+
 	byte_loop:
 		LDA $C051		; text mode
 		LDX #$00		; a long pause at beginning and between flashes
@@ -358,9 +433,14 @@ pexit:	RTS
 ramok:	.asciiz "RAM OK. PUSH SHIFT TO RUN AGAIN."
 
 	; memtest patterns to cycle through
-tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $A5,$5A,$FF,$00 
+tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $A5,$5A,$00,$FF 
 ; tst_tbl:.BYTE $FF ; while debugging, shorten the test value list
 	tst_tbl_end = *
+
+bad_msg:.asciiz "ERR    BANK"
+	bad_msg_len = * - bad_msg
+
+hex_tbl:.asciiz "0123456789ABCDEF"
 
 ; end of the code	
 	endofrom = *
