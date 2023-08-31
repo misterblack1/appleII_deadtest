@@ -1,3 +1,10 @@
+; Apple II Dest Test ROM
+; By David Giller - August 31, 2023
+; Version 0.4
+;
+; Tests up to 48k. Does not currently test Zero Page or Stack. We are assuming those are good.
+; Can detect amount of RAM before testing, so will not say things are "bad" with a system with less than 48k
+;
 	ROM2K = 1
 .ifdef ROM2K
 	.org $F800	; this is designed to run in a 2K rom on the Apple II/II+
@@ -462,7 +469,7 @@ skipv:	INC $10
 pexit:	RTS
 
 
-ramok:	.asciiz "RAM OK. PUSH SHIFT TO RUN AGAIN."
+ramok:	.asciiz "V0.4 RAM OK. PUSH RESET TO RUN AGAIN." ; will currently cycle on real hardware as it's looking for joystick button push
 
 	; memtest patterns to cycle through
 tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
