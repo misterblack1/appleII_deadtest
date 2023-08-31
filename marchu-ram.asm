@@ -44,21 +44,61 @@ sbeep:	DEY 		; startup beep
 		DEX
 		BNE sbeepo
 
+
+		LDA #<MEMTEST_START			; set up the pointers
+		STA ptr_cur
+		LDA #>MEMTEST_START		; set up memory parameters
+		STA pg_start		
+		LDA #>MEMTEST_END
+		STA pg_end
+
+		; Count RAM.  Check start of every 4K block.
+		; Reads from empty locations return $FF
+		LDA #$FF
+		LDX #0
+
+		LDY #$10			; test 4K
+		STX $1000		
+		CMP $1000
+		BEQ count_done
+		LDY #$20			; test 8K
+		STX $2000		
+		CMP $2000
+		BEQ count_done
+		LDY #$30			; test 12K
+		STX $3000		
+		CMP $3000
+		BEQ count_done
+		LDY #$40			; test 16K
+		STX $4000		
+		CMP $4000
+		BEQ count_done
+		LDY #$50			; test 20K
+		STX $5000		
+		CMP $5000
+		BEQ count_done
+		LDY #$60			; test 24K
+		STX $6000		
+		CMP $6000
+		BEQ count_done
+		LDY #$80			; test 32K
+		STX $8000		
+		CMP $8000
+		BEQ count_done
+		LDY #$90			; test 36K
+		STX $9000		
+		CMP $9000
+		BEQ count_done
+		LDY #$C0			; assume 48K
+count_done:
+		STY pg_end
 		JMP marchU
 
 zp_badj:JMP zp_bad
 
-
 .proc 	marchU
 		LDA #(tst_tbl_end-tst_tbl)	; number of test values
 		STA testidx
-
-		LDA #<MEMTEST_START			; set up the pointers
-		STA ptr_cur
-		LDA #>MEMTEST_START
-		STA pg_start		
-		LDA #>MEMTEST_END
-		STA pg_end
 
 	init:	
 		LDY #$00		; Y will be the pointer into the page
@@ -325,12 +365,12 @@ again:	; user pushed a button or shift, so re-run the test
 
 		LDA pg_cur
 
-		CLC				; get the top 3 bits as the bank number
-		CLC
-		CLC
-		CLC
-		CLC
-		CLC
+		ROR				; get the top 3 bits as the bank number
+		ROR
+		ROR
+		ROR
+		ROR
+		ROR
 		
 		AND #$03			; get only the low 3 bits
 
@@ -445,7 +485,7 @@ hex_tbl:.asciiz "0123456789ABCDEF"
 ; end of the code	
 	endofrom = *
 ; fills the unused space with $FF 
-	.res ($FFFA-endofrom), $A5
+	.res ($FFFA-endofrom), $FF
 
 ; vectors
 	.org $FFFA
