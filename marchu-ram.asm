@@ -325,12 +325,12 @@ again:	; user pushed a button or shift, so re-run the test
 
 		LDA pg_cur
 
-		CLC				; get the top 3 bits as the bank number
-		CLC
-		CLC
-		CLC
-		CLC
-		CLC
+		ROR				; get the top 3 bits as the bank number
+		ROR
+		ROR
+		ROR
+		ROR
+		ROR
 		
 		AND #$03			; get only the low 3 bits
 
