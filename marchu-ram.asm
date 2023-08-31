@@ -7,14 +7,14 @@
 	ROMSTART = *
 
 	MEMTEST_START = $0200
-	MEMTEST_END = $C000
+	; MEMTEST_END = $C000
 ; test will end one byte before MEMTEST_END
 
-	ptr_cur	= $10
-	pg_cur	= $11
-	pg_start= $12
-	pg_end	= $13
-	testidx = $14
+	ptr_cur	= $20
+	pg_cur	= $21
+	pg_start= $22
+	pg_end	= $23
+	testidx = $24
 
 		SEI
 		CLD
@@ -49,8 +49,11 @@ sbeep:	DEY 		; startup beep
 		STA ptr_cur
 		LDA #>MEMTEST_START		; set up memory parameters
 		STA pg_start		
-		LDA #>MEMTEST_END
-		STA pg_end
+		; LDA #>MEMTEST_END
+		; STA pg_end
+
+		; LDY #$80			; simulate finding 32K RAM
+		; JMP count_done
 
 		; Count RAM.  Check start of every 4K block.
 		; Reads from empty locations return $FF
@@ -97,7 +100,7 @@ count_done:
 zp_badj:JMP zp_bad
 
 .proc 	marchU
-		LDA #(tst_tbl_end-tst_tbl)	; number of test values
+		LDA #(tst_tbl_end-tst_tbl-1)	; number of test values
 		STA testidx
 
 	init:	
@@ -231,6 +234,8 @@ zp_bad:
 		JMP findbit
 
 zp_good:
+		LDX #$FF	; XXX Hack: fix the stack, we've stomped on it.
+		TXS
 		; LDA #$08		; simulate error
 		; JMP zp_bad
 		; memtest ok put the RAM test good code here
@@ -348,10 +353,6 @@ again:	; user pushed a button or shift, so re-run the test
 		STA $0700,Y		
 		BNE :-
 
-	; 	LDY $28
-	; :	DEY
-	; 	STA $0750,Y		; write the line
-	; 	BNE :-
 
 		LDY #0			; print the bad bank message
 	saybad:
@@ -397,15 +398,6 @@ again:	; user pushed a button or shift, so re-run the test
 		LDA hex_tbl,Y
 		STA $07D4
 
-	; 	LDY $28
-	; :	DEY
-	; 	STA $06D0,Y		; write the line
-	; 	BNE :-
-
-	; 	LDY $28
-	; :	DEY
-	; 	STA $0650,Y		; write the line
-	; 	BNE :-
 		
 
 	byte_loop:
@@ -473,7 +465,7 @@ pexit:	RTS
 ramok:	.asciiz "RAM OK. PUSH SHIFT TO RUN AGAIN."
 
 	; memtest patterns to cycle through
-tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $A5,$5A,$00,$FF 
+tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
 ; tst_tbl:.BYTE $FF ; while debugging, shorten the test value list
 	tst_tbl_end = *
 
