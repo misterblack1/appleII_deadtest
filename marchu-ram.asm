@@ -1,3 +1,5 @@
+.include "inc/a2macros.inc"
+
 	ROM2K = 1
 .ifdef ROM2K
 	.org $F800	; this is designed to run in a 2K rom on the Apple II/II+
@@ -16,6 +18,7 @@
 	pg_end	= $23
 	testidx = $24
 
+start:
 		SEI
 		CLD
 		LDX #$FF
@@ -100,6 +103,10 @@ count_done:
 zp_badj:JMP zp_bad
 
 .proc 	marchU
+		LDA $C050 		; turn on graphics
+        LDA $C057 		; set high res
+		LDA $C053		; mixed mode on
+
 		LDA #(tst_tbl_end-tst_tbl-1)	; number of test values
 		STA testidx
 
@@ -299,10 +306,6 @@ done:
 		JMP done	; infinite loop
 
 again:	; user pushed a button or shift, so re-run the test
-		LDA $C050 		; turn on graphics
-        LDA $C057 		; set high res
-		LDA $C053		; mixed mode on
-
 		JMP marchU 
 
 
@@ -319,21 +322,6 @@ again:	; user pushed a button or shift, so re-run the test
 	oops:	
 		JMP oops			; should not get here?
 .endproc
-
-.macro XYdelay count
-	.if .blank(count)
-	.else
-		.repeat count
-	.endif
-:		DEY 
-        BNE :-
-        DEX 
-        BNE :-
-	.if .blank(count)
-	.else
-		.endrepeat
-	.endif
-.endmacro
 
 .proc flasherr			; time to flash the screen
 		TXS  			; X is holding the bad bit, save it in the SP
@@ -442,7 +430,8 @@ beep:	STA $C030		; tick the speaker
         DEX 
 		BNE bit_loop
 		TSX	
-		JMP byte_loop
+		; JMP byte_loop
+		JMP marchU
 .endproc
 
 print:	LDY #$00	; code to print text to screen
