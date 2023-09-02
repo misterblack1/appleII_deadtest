@@ -23,8 +23,11 @@ RAMSIZE = 16K
 all: apple2.bin
 
 %.bin: %.asm Makefile
-	$(ASSEMBLE) -o $@ $<
+	$(ASSEMBLE) $<
 	-@md5 $@
+
+# $(ASSEMBLE) -o $@ $<
+
 
 apple2.bin: inc/marchu_zpsp.asm inc/marchu.asm inc/a2macros.inc inc/a2constants.inc
 

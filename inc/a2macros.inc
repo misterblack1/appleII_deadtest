@@ -4,7 +4,7 @@
 outer:	LDY #period
 inner:	DEY
 		BNE inner
-		STY SPKR
+		STA SPKR
 		DEX
 		BNE outer
 .endmacro
@@ -59,4 +59,16 @@ pnext:	LDA msg,Y	; pointer to the string
 		INY
 		JMP pnext
 pexit:	
+.endmacro
+
+.macro	zp_alloc id, size
+	.pushseg
+	.zeropage
+	id :
+	.ifblank size
+		.res 1
+	.else
+		.res size
+	.endif
+	.popseg
 .endmacro

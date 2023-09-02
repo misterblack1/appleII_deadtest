@@ -1,16 +1,13 @@
 
-; .zeropage
-; 	ptr_cur:	.res 1 ;	= $20
-; 	pg_cur:		.res 1 ;	= $21
-; 	pg_start:	.res 1 ;	= $22
-; 	pg_end:		.res 1 ;	= $23
-; 	testidx:	.res 1 ;	= $24
-; .code
-ptr_cur		= $20
-pg_cur		= $21
-pg_start	= $22
-pg_end		= $23
-testidx		= $24
+; zp_alloc ptr_cur
+
+.zeropage
+		ptr_cur:	.res 1 ;	= $20
+		pg_cur:		.res 1 ;	= $21
+		pg_start:	.res 1 ;	= $22
+		pg_end:		.res 1 ;	= $23
+		testidx:	.res 1 ;	= $24
+.code
 
 
 .export count_ram
@@ -203,50 +200,34 @@ PG_START = $02
 .endproc
 
 .proc	report_ram
-		; XYbeep $20, $FF
-		; XYbeep $20, $C0
-		; XYbeep $20, $FF
-		; XYbeep $20, $C0
-		; XYbeep $20, $FF
-		; XYbeep $20, $C0
-		ldx #$20
-		ldy #$FF
+		ldx #$20		; cycles
+		lda #$80		; period
 		jsr beep
-		ldy #$C0
+		ldx #$40		; cycles
+		lda #$40		; period
 		jsr beep
-		ldy #$FF
+		ldx #$00		; cycles
+		lda #$20		; period
 		jsr beep
-		ldy #$C0
-		jsr beep
-		ldy #$FF
-		jsr beep
-		ldy #$C0
 		jsr beep
 		RTS
 .endproc
 
-; beep
-; X is number of cycles, Y is period of a cycle
+; A is period, X is cycles, destroys Y
 .proc	beep
-		txa
-		pha
-		tya
-		pha
-outer:	pla
-		pha
+outer:	pha
 		tay
-inner:	sty SPKR
+inner:	nop
+		nop
+		nop
 		dey
 		bne inner
+		STA SPKR
+		pla
 		dex
 		bne outer
-		pla
-		tay
-		pla
-		tax
 		rts
 .endproc
-
 
 ; .data
 ; 	; memtest patterns to cycle through

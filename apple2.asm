@@ -3,6 +3,13 @@
 .include "inc/a2macros.inc"
 .macpack apple2
 .list on 
+.debuginfo
+.feature org_per_seg
+; .export __ZPSTART__ : absolute = $20
+
+.zeropage
+.org $20
+.code
 
 .org $F800				; this is designed to run in a 2K rom on the Apple II/II+
 
@@ -24,8 +31,8 @@ romstart:
 
 		XYbeep $20, $C0
 		clear_text_screen
-		inline_print banner_msg, $0650+((40-(banner_end-banner_msg-1))/2)
-		inline_print zp_msg, $06D0+((40-(zp_end-zp_msg-1))/2)
+		inline_print banner_msg, TXTLINE20+((40-(banner_end-banner_msg-1))/2)
+		inline_print zp_msg, TXTLINE21+((40-(zp_end-zp_msg-1))/2)
 
 
 		; do the zero page test, including its own error reporting
@@ -37,7 +44,7 @@ romstart:
 		XYbeep $80, $FF
 		XYbeep $80, $C0
 
-		inline_print next_msg, $750+((40-(next_end-next_msg-1))/2)
+		inline_print next_msg, TXTLINE21+((40-(next_end-next_msg-1))/2)
 
 		JSR display_delay
 		; delay_cycles 500000
@@ -55,7 +62,7 @@ test_ram:
 		JMP test_ram
 
 .proc	display_delay
-		LDA #6
+		LDA #4
 loop:	PHA
 		delay_cycles 500000
 		PLA
@@ -65,21 +72,58 @@ loop:	PHA
 		RTS
 .endproc
 
+; ; print a string that's embedded immediately after the JSR
+; ; screen location is in A register
+; .proc	print_embedded
+; 		xsave = $25
+; 		ysave = $26
+; 		asave = $27
+; 		str = $28
+; 		strhi = $29
+; 		loc = $30
+; 		lochi = $31
+
+; 		stx xsave
+; 		sty ysave
+; 		sta asave
+
+; 		pla				; fetch address of string (minus one)
+; 		sta str
+; 		pla
+; 		sta strhi
+
+; 		ldy	#$00		; index will remain 0
+; 	next_char:
+; 		inc	str			; increment pointer
+; 		bne nocarry
+; 		inc strhi
+; 	nocarry:
+; 		lda (str),y		; get character
+; 		beq end
+
+; 	end:
+; .endproc
+
 .include "inc/marchu.asm"
 
-tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
-; tst_tbl:.BYTE $FF ; while debugging, shorten the test value list
+; tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
+tst_tbl:.BYTE $5A ; while debugging, shorten the test value list
 	tst_tbl_end = *
 	; 	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
 	; 	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
 	; zp_tbl_end = *
 
-banner_msg: .asciiz "DEAD TEST BY KI3V AND ADRIAN BLACK"
-	banner_end = *
-zp_msg: .asciiz "TESTING ZERO PAGE AND STACK AREA"
-	zp_end = *
-next_msg: .asciiz "ZP/STACK OK - NOW TESTING RAM"
-	next_end = *
+banner_msg: 
+		.asciiz "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
+banner_end = *
+
+zp_msg:
+		.asciiz "TESTING ZERO/STACK PAGES"
+zp_end = *
+
+next_msg:
+		.asciiz "ZERO/STACK PAGES OK - RUNNING RAM TEST"
+next_end = *
 ;-----------------------------------------------------------------------------
 ; end of the code	
 	endofrom = *
