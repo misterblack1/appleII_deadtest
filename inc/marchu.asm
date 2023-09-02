@@ -151,8 +151,8 @@ PG_START = $02
 
 	bad:RTS
 
+		LDY #$FF		; start at FF and count down
 	step3:	
-		DEY				; pre-decrement (because counting down works differently than counting up)
 		TXA				; get the test value
 		EOR #$FF		; invert
 		EOR (ptr_cur),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
@@ -165,7 +165,7 @@ PG_START = $02
 		EOR #$FF		; invert
 		STA (ptr_cur),Y	; w1 - write the inverted test value
 		DEY				; determine if we are at offset zero
-		INY
+		CPY $FF			; did we wrap around?
 		BNE step3		; repeat until Y overflows back to FF
 
 		DEC pg_cur		; decrement the page
@@ -178,7 +178,6 @@ PG_START = $02
 		STA pg_cur
 		DEC pg_cur		; start at the end page minus one
 	step4:	
-		DEY				; pre-decrement (because counting down works differently than counting up)
 		TXA				; get the test value
 		EOR #$FF		; invert
 		EOR (ptr_cur),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
@@ -186,7 +185,7 @@ PG_START = $02
 		TXA				; get the test value
 		STA (ptr_cur),Y	; w0 - write the test value
 		DEY				; determine if we are at offset zero
-		INY
+		CPY $FF			; did we wrap around?
 		BNE step4		; repeat until Y overflows back to FF
 
 		DEC pg_cur		; decrement the page
@@ -229,17 +228,22 @@ PG_START = $02
 ; beep
 ; X is number of cycles, Y is period of a cycle
 .proc	beep
-		phx
-		phy
-outer:	ply
-		phy
+		txa
+		pha
+		tya
+		pha
+outer:	pla
+		pha
+		tay
 inner:	sty SPKR
 		dey
 		bne inner
 		dex
 		bne outer
-		ply
-		plx
+		pla
+		tay
+		pla
+		tax
 		rts
 .endproc
 

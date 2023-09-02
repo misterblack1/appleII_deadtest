@@ -24,6 +24,19 @@ inner:	DEY
 	.endif
 .endmacro
 
+; this macro can delay for an approximate specified number of clock cycles up to 589815
+; downside is it destroys A and Y
+.macro delay_cycles cycles
+		.local n
+		n = cycles/9
+		lda #>n
+		ldy #<n
+	:	cpy #1			; 2 cycles
+		dey				; 2 cycles
+		sbc #0			; 2 cycles
+		bcs :-			; 3 cycles
+.endmacro
+
 .macro	clear_text_screen
 		LDA #$A0	 	; A0 is the black character on the Apple II and II plus
 		LDY $FF			; clear the screen
