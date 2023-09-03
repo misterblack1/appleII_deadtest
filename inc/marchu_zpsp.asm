@@ -51,7 +51,7 @@ marchU1:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accu
 
 ; 100ms delay for finding bit rot
 marchU1delay:
-		delay_cycles 10000
+		inline_delay_cycles_ay 10000
 		LDY #$00		; reset Y to 0
 
 		TXA				; recover test value
@@ -72,7 +72,7 @@ marchU2:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accu
 
 ; 100ms delay for finding bit rot
 marchU2delay:
-		delay_cycles 10000
+		inline_delay_cycles_ay 10000
 		LDY #$FF		; reset Y to 0
 
 		JMP continue
@@ -152,7 +152,6 @@ wha:	JMP wha			; should not get here?
 		STA TXTSET		; text mode
 		STA LOWSCR		; page 2 off
 
-		; clear_text_screen
 		inline_print bad_msg, $0750
 
 		TSX					; get the bad bits mask from the sp
@@ -167,7 +166,7 @@ wha:	JMP wha			; should not get here?
 		STA TXTSET			; text mode
 		LDX #$00			; a long pause at beginning and between flashes
         LDY #$00
-		XYdelay 4
+		inline_delay_xy 4
 		TSX	
 	flash_bit:
 		STA TXTCLR 			; turn on graphics
@@ -175,14 +174,14 @@ wha:	JMP wha			; should not get here?
 		STA MIXSET			; mixed mode
 		TXA					; save bit counter in A
 
-		XYbeep $FF, $FF
+		inline_beep_xy $FF, $FF
 
 		STA TXTSET			; text mode
 		; TXA					; save bit counter in A
 
 		LDX #$7F			; pause with low res on
         LDY #$00
-		XYdelay 2
+		inline_delay_xy 2
 
         TAX					; move bit counter back to X
         DEX 

@@ -1,20 +1,18 @@
 .list off
+.feature org_per_seg
+.feature leading_dot_in_identifiers
 .include "inc/a2constants.inc"
 .include "inc/a2macros.inc"
-.macpack apple2
 .list on 
 .debuginfo
-.feature org_per_seg
-; .export __ZPSTART__ : absolute = $20
 
 .zeropage
-.org $20
+.org $0
 .code
 
 .org $F800				; this is designed to run in a 2K rom on the Apple II/II+
 
 romstart:
-
 		sei				; stop interrupts
 		cld				; make sure we're not in decimal mode
 		ldx #$FF
@@ -29,9 +27,9 @@ romstart:
 		lda BUTN0		; read button 1 to clear the reading
 		lda BUTN1		; read button 2 to clear the reading
 
-		XYbeep $20, $C0
-		clear_text_screen
-		inline_print banner_msg, TXTLINE20+((40-(banner_end-banner_msg-1))/2)
+		inline_beep_xy $20, $C0
+		inline_cls
+		; inline_print banner_msg, TXTLINE20+((40-(banner_end-banner_msg-1))/2)
 		inline_print zp_msg, TXTLINE21+((40-(zp_end-zp_msg-1))/2)
 
 
@@ -41,15 +39,17 @@ romstart:
 		ldx #$FF
 		txs				; initialize the stack pointer
 
-		XYbeep $80, $FF
-		XYbeep $80, $C0
+		puts_centered_at TXTLINE20, "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
+		puts_centered_at TXTLINE21, "ZERO/STACK PAGES OK - RUNNING RAM TEST"
 
-		inline_print next_msg, TXTLINE21+((40-(next_end-next_msg-1))/2)
+		ldx #$40		; cycles
+		lda #$80		; period
+		jsr beep
+		ldx #$80		; cycles
+		lda #$40		; period
+		jsr beep
 
 		JSR display_delay
-		; delay_cycles 500000
-		; delay_cycles 500000
-
 		sta TXTCLR		; use graphics
         sta HIRES 		; set high res
 		sta MIXSET		; mixed mode on
@@ -64,7 +64,7 @@ test_ram:
 .proc	display_delay
 		LDA #4
 loop:	PHA
-		delay_cycles 500000
+		inline_delay_cycles_ay 500000
 		PLA
 		SEC
 		SBC #1
@@ -72,58 +72,29 @@ loop:	PHA
 		RTS
 .endproc
 
-; ; print a string that's embedded immediately after the JSR
-; ; screen location is in A register
-; .proc	print_embedded
-; 		xsave = $25
-; 		ysave = $26
-; 		asave = $27
-; 		str = $28
-; 		strhi = $29
-; 		loc = $30
-; 		lochi = $31
-
-; 		stx xsave
-; 		sty ysave
-; 		sta asave
-
-; 		pla				; fetch address of string (minus one)
-; 		sta str
-; 		pla
-; 		sta strhi
-
-; 		ldy	#$00		; index will remain 0
-; 	next_char:
-; 		inc	str			; increment pointer
-; 		bne nocarry
-; 		inc strhi
-; 	nocarry:
-; 		lda (str),y		; get character
-; 		beq end
-
-; 	end:
-; .endproc
 
 .include "inc/marchu.asm"
 
-; tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
-tst_tbl:.BYTE $5A ; while debugging, shorten the test value list
+.include "inc/a2console.asm"
+
+tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
+; tst_tbl:.BYTE $5A ; while debugging, shorten the test value list
 	tst_tbl_end = *
 	; 	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
 	; 	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
 	; zp_tbl_end = *
 
-banner_msg: 
-		.asciiz "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
-banner_end = *
+; banner_msg: 
+; 		.asciiz "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
+; banner_end = *
 
 zp_msg:
-		.asciiz "TESTING ZERO/STACK PAGES"
+		.apple2sz "TESTING ZERO/STACK PAGES"
 zp_end = *
 
-next_msg:
-		.asciiz "ZERO/STACK PAGES OK - RUNNING RAM TEST"
-next_end = *
+; next_msg:
+; 		.asciiz "ZERO/STACK PAGES OK - RUNNING RAM TEST"
+; next_end = *
 ;-----------------------------------------------------------------------------
 ; end of the code	
 	endofrom = *

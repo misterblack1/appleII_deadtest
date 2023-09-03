@@ -1,16 +1,17 @@
 
-; zp_alloc ptr_cur
+; zp_alloc mu_ptr_lo
 
 .zeropage
-		ptr_cur:	.res 1 ;	= $20
-		pg_cur:		.res 1 ;	= $21
-		pg_start:	.res 1 ;	= $22
-		pg_end:		.res 1 ;	= $23
-		testidx:	.res 1 ;	= $24
+		mu_ptr_lo:		.res 1
+		mu_ptr_hi:		.res 1
+		mu_page_start:	.res 1
+		mu_page_end:	.res 1
+		mu_test_idx:	.res 1
 .code
 
+FIRST_PAGE = $02
 
-.export count_ram
+
 .proc	count_ram
 		; Count RAM.  Check start of every 4K block.
 		; Reads from empty locations return $FF
@@ -51,31 +52,28 @@
 		BEQ count_done
 		LDY #$C0			; assume 48K
 count_done:
-		STY pg_end
+		STY mu_page_end
 		RTS
 .endproc
 
-PG_START = $02
-
 ; marchU
 ; returns bitmask of bad bits in A
-.export marchU
 .proc 	marchU
 		LDA #0				; low bits 0 so we test a hardware page at a time
-		STA ptr_cur
-		LDA #PG_START		; set starting address (maybe change later to a parameter?)
-		STA pg_start
+		STA mu_ptr_lo
+		LDA #FIRST_PAGE		; set starting address (maybe change later to a parameter?)
+		STA mu_page_start
 
 		LDA #(tst_tbl_end-tst_tbl-1) ; number of test values
-		STA testidx
+		STA mu_test_idx
 
 	init:	
 		LDY #$00			; Y will be the pointer into the page
-		LDX testidx			; get the index to the test value pages
+		LDX mu_test_idx		; get the index to the test value pages
 		LDA tst_tbl,X		; get the test value into A
 		TAX					; X will contain the test val throughout marchU
-		LDA pg_start
-		STA pg_cur
+		LDA mu_page_start
+		STA mu_ptr_hi
 
 ; In the descriptions below:
 ;	up: 	perform the test from low addresses to high ones
@@ -88,62 +86,62 @@ PG_START = $02
 ; step 0; up - w0 - write the test value
 	step0:	
 		TXA				; get the test value
-		STA (ptr_cur),Y	; w0 - write the test value to current location
+		STA (mu_ptr_lo),Y	; w0 - write the test value to current location
 		INY				; count up
 		BNE step0		; repeat until Y overflows back to zero (do the whole page)
 
-		INC pg_cur		; increment the page
-		LDA pg_cur
-		CMP pg_end		; compare with (one page past) the last page
+		INC mu_ptr_hi	; increment the page
+		LDA mu_ptr_hi
+		CMP mu_page_end	; compare with (one page past) the last page
 		BNE step0		; if not there yet, loop again
 
 		; LDA #$08		; simulate error
 		; JMP bad
 
 ; step 1; up - r0,w1,r1,w0
-		LDA pg_start	; set up the starting page again for next stage
-		STA pg_cur
+		LDA mu_page_start	; set up the starting page again for next stage
+		STA mu_ptr_hi
 	step1:	
 		TXA				; get the test value
-		EOR (ptr_cur),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
+		EOR (mu_ptr_lo),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE bad			; if bits differ, location is bad
 		TXA				; get the test value
 		EOR #$FF		; invert
-		STA (ptr_cur),Y	; w1 - write the inverted test value
-		EOR (ptr_cur),Y	; r1 - read the same value back and compare using XOR
+		STA (mu_ptr_lo),Y	; w1 - write the inverted test value
+		EOR (mu_ptr_lo),Y	; r1 - read the same value back and compare using XOR
 		BNE bad			; if bits differ, location is bad
 		TXA				; get the test value
-		STA (ptr_cur),Y	; w0 - write the test value to the memory location
+		STA (mu_ptr_lo),Y	; w0 - write the test value to the memory location
 		INY				; count up
 		BNE step1		; repeat until Y overflows back to zero
 
-		INC pg_cur		; increment the page
-		LDA pg_cur
-		CMP pg_end		; compare with (one page past) the last page
+		INC mu_ptr_hi	; increment the page
+		LDA mu_ptr_hi
+		CMP mu_page_end	; compare with (one page past) the last page
 		BNE step1		; if not there yet, loop again
 
 ; step 2; up - r0,w1
-		LDA pg_start	; set up the starting page again for next stage
-		STA pg_cur
+		LDA mu_page_start	; set up the starting page again for next stage
+		STA mu_ptr_hi
 	step2:	
 		TXA				; get the test value
-		EOR (ptr_cur),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
+		EOR (mu_ptr_lo),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE bad			; if bits differ, location is bad
 		TXA				; get the test value
 		EOR #$FF		; invert
-		STA (ptr_cur),Y	; w1 - write the inverted test value
+		STA (mu_ptr_lo),Y	; w1 - write the inverted test value
 		INY				; count up
 		BNE step2		; repeat until Y overflows back to zero
 
-		INC pg_cur		; increment the page
-		LDA pg_cur
-		CMP pg_end		; compare with (one page past) the last page
+		INC mu_ptr_hi	; increment the page
+		LDA mu_ptr_hi
+		CMP mu_page_end	; compare with (one page past) the last page
 		BNE step2		; if not there yet, loop again
 
 ; step 3; down - r1,w0,r0,w1
-		LDA pg_end
-		STA pg_cur
-		DEC pg_cur		; start at the end page minus one
+		LDA mu_page_end
+		STA mu_ptr_hi
+		DEC mu_ptr_hi	; start at the end page minus one
 		JMP step3
 
 	bad:RTS
@@ -152,48 +150,48 @@ PG_START = $02
 	step3:	
 		TXA				; get the test value
 		EOR #$FF		; invert
-		EOR (ptr_cur),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
+		EOR (mu_ptr_lo),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE bad			; if bits differ, location is bad
 		TXA				; get the test value
-		STA (ptr_cur),Y	; w0 - write the test value
-		EOR (ptr_cur),Y	; r0 - read the same value back and compare using XOR
+		STA (mu_ptr_lo),Y	; w0 - write the test value
+		EOR (mu_ptr_lo),Y	; r0 - read the same value back and compare using XOR
 		BNE bad			; if bits differ, location is bad
 		TXA				; get the test value
 		EOR #$FF		; invert
-		STA (ptr_cur),Y	; w1 - write the inverted test value
+		STA (mu_ptr_lo),Y	; w1 - write the inverted test value
 		DEY				; determine if we are at offset zero
 		CPY $FF			; did we wrap around?
 		BNE step3		; repeat until Y overflows back to FF
 
-		DEC pg_cur		; decrement the page
-		LDA pg_cur
-		CMP pg_start	; compare with the first page, which can't be zero
-		BCS step3		; if not there yet (pg_cur>=pg_start so carry set), loop again
+		DEC mu_ptr_hi	; decrement the page
+		LDA mu_ptr_hi
+		CMP mu_page_start	; compare with the first page, which can't be zero
+		BCS step3		; if not there yet (mu_ptr_hi>=mu_page_start so carry set), loop again
 
 ; step 4; down - r1,w0
-		LDA pg_end
-		STA pg_cur
-		DEC pg_cur		; start at the end page minus one
+		LDA mu_page_end
+		STA mu_ptr_hi
+		DEC mu_ptr_hi	; start at the end page minus one
 	step4:	
 		TXA				; get the test value
 		EOR #$FF		; invert
-		EOR (ptr_cur),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
+		EOR (mu_ptr_lo),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
 		BNE bad			; if bits differ, location is bad
 		TXA				; get the test value
-		STA (ptr_cur),Y	; w0 - write the test value
+		STA (mu_ptr_lo),Y	; w0 - write the test value
 		DEY				; determine if we are at offset zero
 		CPY $FF			; did we wrap around?
 		BNE step4		; repeat until Y overflows back to FF
 
-		DEC pg_cur		; decrement the page
-		LDA pg_cur
-		CMP pg_start	; compare with the first page, which can't be zero
-		BCS step4		; if not there yet (pg_cur>=pg_start so carry set), loop again
+		DEC mu_ptr_hi	; decrement the page
+		LDA mu_ptr_hi
+		CMP mu_page_start	; compare with the first page, which can't be zero
+		BCS step4		; if not there yet (mu_ptr_hi>=mu_page_start so carry set), loop again
 
 ; now, determine whether to repeat with a new test value
-		LDX testidx
+		LDX mu_test_idx
 		DEX
-		STX testidx
+		STX mu_test_idx
 		BMI good		; out of test values, declare it good
 		JMP init		; else go to next test value
 	good:RTS

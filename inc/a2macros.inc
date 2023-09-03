@@ -1,4 +1,11 @@
-.macro	XYbeep length, period
+.macpack apple2
+
+.macro .apple2sz string
+		scrcode string
+		.byte 0
+.endmacro
+
+.macro	inline_beep_xy length, period
 		.local outer, inner
 		LDX #length
 outer:	LDY #period
@@ -9,7 +16,7 @@ inner:	DEY
 		BNE outer
 .endmacro
 
-.macro 	XYdelay count
+.macro 	inline_delay_xy count
 	.if .blank(count)
 	.else
 		.repeat count
@@ -26,7 +33,7 @@ inner:	DEY
 
 ; this macro can delay for an approximate specified number of clock cycles up to 589815
 ; downside is it destroys A and Y
-.macro delay_cycles cycles
+.macro inline_delay_cycles_ay cycles
 		.local n
 		n = cycles/9
 		lda #>n
@@ -37,7 +44,7 @@ inner:	DEY
 		bcs :-			; 3 cycles
 .endmacro
 
-.macro	clear_text_screen
+.macro	inline_cls
 		LDA #$A0	 	; A0 is the black character on the Apple II and II plus
 		LDY $FF			; clear the screen
 	:	DEY
@@ -54,10 +61,10 @@ inner:	DEY
 		LDY #$00	; code to print text to screen
 pnext:	LDA msg,Y	; pointer to the string
 		BEQ pexit	; end of string
-		ORA #$80	; to fix flashing text on Apple II and II+
+		; ORA #$80	; to fix flashing text on Apple II and II+
 		STA dst,Y	; video memory pointer
 		INY
-		JMP pnext
+		BNE pnext	; next char (unless we overflowed)
 pexit:	
 .endmacro
 
@@ -71,4 +78,26 @@ pexit:
 		.res size
 	.endif
 	.popseg
+.endmacro
+
+.macro puts_at loc, message
+		jsr con_puts_embedded
+		.word loc
+		scrcode message
+		.byte 0
+.endmacro
+
+.macro puts_centered_at lineloc, message
+		.local msg, loc, end
+		jsr con_puts_embedded
+		.word lineloc+((40-(end-msg))/2)
+msg:	scrcode message
+end:	.byte 0
+.endmacro
+
+.macro m_con_goto line, col
+		lda #<(line+col)
+		sta con_loc
+		lda #>line
+		sta con_loc
 .endmacro

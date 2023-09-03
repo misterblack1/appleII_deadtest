@@ -1,9 +1,3 @@
-# SOURCE = apple2-deadtest.asm
-# SOURCE = apple2-deadtest-h.asm
-# SOURCE = zp-march.asm
-# SOURCE = zpsp-march.asm
-# SOURCE = march-highres.asm
-# SOURCE = marchu-ram.asm
 SOURCE = apple2.asm
 
 MAME = $(HOME)/Downloads/mame0257-arm64/mame
@@ -18,22 +12,23 @@ ASSEMBLE = $(ASSEMBLE_sa)
 
 RAMSIZE = 16K
 
+CHECKSUM = sha1sum --tag
 
 # all: $(OUTPUT)
 all: apple2.bin
 
 %.bin: %.asm Makefile
-	$(ASSEMBLE) $<
-	-@md5 $@
+	$(ASSEMBLE) -o $@ $<
+	-@$(CHECKSUM) $@
 
 # $(ASSEMBLE) -o $@ $<
 
 
-apple2.bin: inc/marchu_zpsp.asm inc/marchu.asm inc/a2macros.inc inc/a2constants.inc
+apple2.bin: inc/marchu_zpsp.asm inc/marchu.asm inc/a2console.asm inc/a2macros.inc inc/a2constants.inc
 
-$(OUTPUT): $(SOURCE) Makefile
-	$(ASSEMBLE) -o $(OUTPUT) $(SOURCE)
-	-@md5 $(OUTPUT)
+# $(OUTPUT): $(SOURCE) Makefile
+# 	$(ASSEMBLE) -o $(OUTPUT) $(SOURCE)
+# 	-@md5 $(OUTPUT)
 
 debug: $(OUTPUT)
 	ln -sf $< 341-0020-00.f8
