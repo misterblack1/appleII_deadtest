@@ -30,7 +30,6 @@ romstart:
 		inline_beep_xy $20, $C0
 		inline_cls
 		; inline_print banner_msg, TXTLINE20+((40-(banner_end-banner_msg-1))/2)
-		inline_print zp_msg, TXTLINE21+((40-(zp_end-zp_msg-1))/2)
 
 
 		; do the zero page test, including its own error reporting
@@ -89,8 +88,15 @@ tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A
 ; banner_end = *
 
 zp_msg:
-		.apple2sz "TESTING ZERO/STACK PAGES"
+		.apple2sz "TEST ZERO PAGE"
 zp_end = *
+pt_msg:
+		.apple2sz "TEST PAGE ERRORS"
+pt_end:
+pe_msg:
+		.asciiz   "PAGE ERRORS FOUND"
+pe_end:
+
 
 ; next_msg:
 ; 		.asciiz "ZERO/STACK PAGES OK - RUNNING RAM TEST"

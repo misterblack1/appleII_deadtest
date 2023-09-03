@@ -1,5 +1,7 @@
 .scope	ZPSP
 
+		inline_print zp_msg, TXTLINE21+((40-(zp_end-zp_msg-1))/2)
+
 start:	
 		LDX #(tst_tbl_end-tst_tbl-1)	; initialize the pointer to the table of values
 		; LDX #$10			; start testing with value 0
@@ -7,21 +9,18 @@ start:
 ; step 0; up - w0 - write the test value
 marchU:	
 		LDA tst_tbl,X	; get the test value into A
-
+		TXS				; save the index of the test value into SP
+		TAX				; save the test value into X
+		
 		LDY #$27		; write value at bottom of screen
 	:	STA $07D0,Y
 		DEY
 		BPL :-
 
-		TXS				; save the index of the test value into SP
-		TAX				; save the test value into X
-		; TXA				; copy the test value into A
 		LDY #$00
-
 marchU0:
 		STA $00,Y		; w0 - write the test value
 		STA $0100,Y		;    - also to stack page
-		; STA $0700,Y		; also write to the screen
 		INY				; count up
 		BNE marchU0		; repeat until Y overflows back to zero
 
@@ -52,12 +51,12 @@ marchU1:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accu
 ; 100ms delay for finding bit rot
 marchU1delay:
 		inline_delay_cycles_ay 10000
+		
 		LDY #$00		; reset Y to 0
-
-		TXA				; recover test value
 ; step 2; up - r0,w1
 ; A contains test value from prev step
-marchU2:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
+marchU2:TXA				; recover test value
+		EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
 		BNE zp_bad		; if bits differ, location is bad
 		TXA				; get the test value
 		EOR $0100,Y		; r0s  - also stack page
@@ -66,20 +65,19 @@ marchU2:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accu
 		EOR #$FF		; invert
 		STA $00,Y		; w1 - write the inverted test value
 		STA $0100,Y		; w1s - also stack page
-		EOR #$FF		; invert
+		; EOR #$FF		; invert
 		INY				; count up
 		BNE marchU2		; repeat until Y overflows back to zero
 
 ; 100ms delay for finding bit rot
 marchU2delay:
 		inline_delay_cycles_ay 10000
-		LDY #$FF		; reset Y to 0
-
 		JMP continue
 
 zp_bad:	JMP findbit
 
 continue:
+		LDY #$FF		; reset Y to $FF and count down
 		TXA				; recover test value
 		EOR #$FF		; invert
 ; step 3; down - r1,w0,r0,w1
@@ -124,8 +122,8 @@ marchU4:EOR $00,Y		; r1 - read and compare with inverted test value (by XOR'ing 
 		TSX				; recover the test value index from SP
 		DEX				; choose the next one
 		CPX #$FF		; see if we've wrapped
-		; BNE marchup		; start again with next value
-		BPL marchup		; start again with next value
+		BNE marchup		; start again with next value
+		; BPL marchup		; start again with next value
 		JMP zp_good
 
 marchup:
@@ -189,12 +187,63 @@ wha:	JMP wha			; should not get here?
 		JMP flash_byte
 .endproc
 
-bad_msg:.asciiz "BAD BIT   "
+bad_msg:.apple2sz "BAD BIT   "
 	bad_msg_len = * - bad_msg
 
-hex_tbl:.asciiz "0123456789ABCDEF"
+hex_tbl:.apple2sz "0123456789ABCDEF"
 
 zp_good:
-		; lda #$08			; simulate error
-		; jmp findbit			; simulate error
+
+
+; .macro _test_bank addr
+; 		LDX #<addr		; record what bank we're on
+; 		STA addr		; write to that bank
+; 		LDY $00			; check the ZP location
+; 		BNE page_error
+; .endmacro
+
+		inline_print pt_msg, TXTLINE21+((40-(pt_end-pt_msg-1))/2)
+
+.proc page_test
+		LDA #0		; write zero to zp location 0
+		TAY
+	wz:	STA $00,Y
+		DEY
+		BNE wz
+
+		LDX #(tst_tbl_end-tst_tbl-1)	; initialize the pointer to the table of values
+
+		LDY #0
+	wr:	LDA tst_tbl,X	; get the test value into A
+		STA $0100,Y		; write to the banks
+		STA $0200,Y
+		STA $0400,Y
+		STA $0800,Y
+		STA $1000,Y
+		STA $2000,Y
+		STA $4000,Y
+		STA $8000,Y
+		LDA $00,Y			; check the zp address
+		BNE bank_error
+		INY
+		BNE wr
+
+		DEX				; choose the next one
+		BPL wr			; start again with next value
+
+
+		JMP bank_ok
+.endproc
+
+.proc bank_error
+		inline_print pe_msg, TXTLINE21+((40-(pe_end-pe_msg-1))/2)
+
+loop:	inline_beep_xy $40, $80
+		LDX #$40
+		LDY #$00
+		inline_delay_xy
+		JMP loop
+.endproc
+
+bank_ok:
 .endscope
