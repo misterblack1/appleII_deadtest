@@ -37,9 +37,10 @@ romstart:
 		; now we trust the zero page and stack page
 		ldx #$FF
 		txs				; initialize the stack pointer
+		JSR count_ram	; count how much RAM is installed
 
-		puts_centered_at TXTLINE20, "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
-		puts_centered_at TXTLINE21, "ZERO/STACK PAGES OK - RUNNING RAM TEST"
+		jsr show_banner
+		puts_centered_at TXTLINE23, "ZERO/STACK PAGES OK"
 
 		ldx #$40		; cycles
 		lda #$80		; period
@@ -48,20 +49,31 @@ romstart:
 		lda #$40		; period
 		jsr beep
 
+		LDA #8
 		JSR display_delay
 		sta TXTCLR		; use graphics
         sta HIRES 		; set high res
 		sta MIXSET		; mixed mode on
 
-
-		JSR count_ram	; count how much RAM is installed
 test_ram:
 		JSR marchU		; run the test on RAM
-		JSR report_ram	; report the results
+		; JSR report_ram	; report the results
 		JMP test_ram
 
+.proc	show_banner
+		jsr con_cls
+		puts_centered_at TXTLINE21, "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
+		puts_centered_at TXTLINE22, "TESTING RAM FROM $0200 TO $XXFF"
+		m_con_goto TXTLINE22, 31
+		LDA mu_page_end
+		SEC
+		SBC #1
+		jsr con_put_hex
+		rts
+.endproc
+
 .proc	display_delay
-		LDA #4
+		; LDA #4
 loop:	PHA
 		inline_delay_cycles_ay 500000
 		PLA
@@ -76,8 +88,8 @@ loop:	PHA
 
 .include "inc/a2console.asm"
 
-tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
-; tst_tbl:.BYTE $5A ; while debugging, shorten the test value list
+; tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
+tst_tbl:.BYTE $80 ; while debugging, shorten the test value list
 	tst_tbl_end = *
 	; 	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
 	; 	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
@@ -87,6 +99,8 @@ tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A
 ; 		.asciiz "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
 ; banner_end = *
 
+hex_tbl:.apple2sz "0123456789ABCDEF"
+
 zp_msg:
 		.apple2sz "TEST ZERO PAGE"
 zp_end = *
@@ -94,8 +108,10 @@ pt_msg:
 		.apple2sz "TEST PAGE ERRORS"
 pt_end:
 pe_msg:
-		.asciiz   "PAGE ERRORS FOUND"
+		.apple2sz "PAGE ERRORS FOUND"
 pe_end:
+; re_msg: .apple2sz "RAM ERROR: XX AT XXXX"
+; re_end:
 
 
 ; next_msg:

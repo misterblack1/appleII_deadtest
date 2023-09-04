@@ -99,5 +99,5 @@ end:	.byte 0
 		lda #<(line+col)
 		sta con_loc
 		lda #>line
-		sta con_loc
+		sta con_loc+1
 .endmacro

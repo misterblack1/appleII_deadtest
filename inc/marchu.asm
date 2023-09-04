@@ -3,10 +3,12 @@
 
 .zeropage
 		mu_ptr_lo:		.res 1
-		mu_ptr_hi:		.res 1
-		mu_page_start:	.res 1
+		mu_ptr_hi:
+		count_ptr:		.res 1	; when counting, use same location to store low part of address
 		mu_page_end:	.res 1
+		mu_page_start:	.res 1
 		mu_test_idx:	.res 1
+		scratch:		.res 2
 .code
 
 FIRST_PAGE = $02
@@ -15,45 +17,26 @@ FIRST_PAGE = $02
 .proc	count_ram
 		; Count RAM.  Check start of every 4K block.
 		; Reads from empty locations return $FF
-		LDA #$FF
-		LDX #0
+		LDA #0
+		STA count_ptr		; low bits.  High are at mu_page_end
 
-		LDY #$10			; test 4K
-		STX $1000		
-		CMP $1000
-		BEQ count_done
-		LDY #$20			; test 8K
-		STX $2000		
-		CMP $2000
-		BEQ count_done
-		LDY #$30			; test 12K
-		STX $3000		
-		CMP $3000
-		BEQ count_done
-		LDY #$40			; test 16K
-		STX $4000		
-		CMP $4000
-		BEQ count_done
-		LDY #$50			; test 20K
-		STX $5000		
-		CMP $5000
-		BEQ count_done
-		LDY #$60			; test 24K
-		STX $6000		
-		CMP $6000
-		BEQ count_done
-		LDY #$80			; test 32K
-		STX $8000		
-		CMP $8000
-		BEQ count_done
-		LDY #$90			; test 36K
-		STX $9000		
-		CMP $9000
-		BEQ count_done
-		LDY #$C0			; assume 48K
-count_done:
-		STY mu_page_end
+		LDY #0				; no offsets
+		LDX #(sizes_end-sizes-1)
+	lp:	LDA sizes,X			; fetch the size from the table
+		STA mu_page_end		; use it as the page number in the scratch pointer
+		LDA #0
+		STA (count_ptr),Y	; store 0 at the start of the page
+		CMP (count_ptr),Y	; see if it stuck.  If no RAM there, will return $FF
+		BNE found			; XXX (should we check only for $FF) if no match, we found the end of RAM
+		DEX
+		BPL lp
+		LDA #$C0				; if not yet found, it's 48K
+		STA mu_page_end
+	found:
 		RTS
+
+		sizes: .byte $90,$80,$60,$50,$40,$30,$20,$10
+		sizes_end = *
 .endproc
 
 ; marchU
@@ -142,10 +125,12 @@ count_done:
 		LDA mu_page_end
 		STA mu_ptr_hi
 		DEC mu_ptr_hi	; start at the end page minus one
-		JMP step3
+		JMP continue3
 
-	bad:RTS
+	bad:STY mu_ptr_lo
+		JMP report_bad
 
+	continue3:
 		LDY #$FF		; start at FF and count down
 	step3:	
 		TXA				; get the test value
@@ -160,7 +145,7 @@ count_done:
 		EOR #$FF		; invert
 		STA (mu_ptr_lo),Y	; w1 - write the inverted test value
 		DEY				; determine if we are at offset zero
-		CPY $FF			; did we wrap around?
+		CPY #$FF			; did we wrap around?
 		BNE step3		; repeat until Y overflows back to FF
 
 		DEC mu_ptr_hi	; decrement the page
@@ -180,7 +165,7 @@ count_done:
 		TXA				; get the test value
 		STA (mu_ptr_lo),Y	; w0 - write the test value
 		DEY				; determine if we are at offset zero
-		CPY $FF			; did we wrap around?
+		CPY #$FF			; did we wrap around?
 		BNE step4		; repeat until Y overflows back to FF
 
 		DEC mu_ptr_hi	; decrement the page
@@ -192,12 +177,50 @@ count_done:
 		LDX mu_test_idx
 		DEX
 		STX mu_test_idx
-		BMI good		; out of test values, declare it good
+		BMI report_good		; out of test values, declare it good
 		JMP init		; else go to next test value
-	good:RTS
+	; good:
+	; 	JMP report_good
+	; 	RTS
 .endproc
 
-.proc	report_ram
+.proc	report_bad
+		; cmp #0
+		; beq report_good
+		pha
+		jsr show_banner
+		puts_centered_at TXTLINE23, "RAM ERROR: $XX AT $XXXX"
+
+		m_con_goto TXTLINE23,20
+		pla
+		jsr con_put_hex
+
+		m_con_goto TXTLINE23,27
+		lda mu_ptr_hi
+		jsr con_put_hex
+		m_con_goto TXTLINE23,29
+		lda mu_ptr_lo
+		jsr con_put_hex
+
+		ldx #$20		; cycles
+		lda #$80		; period
+		jsr beep
+		ldx #$FF		; cycles
+		lda #$FF		; period
+		jsr beep
+		ldx #$FF		; cycles
+		lda #$FF		; period
+		jsr beep
+
+		LDA #20
+		jsr display_delay
+		rts
+.endproc
+
+.proc	report_good
+		; jmp report_bad
+		jsr show_banner
+		puts_centered_at TXTLINE23, "RAM TEST OK"
 		ldx #$20		; cycles
 		lda #$80		; period
 		jsr beep
@@ -207,7 +230,8 @@ count_done:
 		ldx #$00		; cycles
 		lda #$20		; period
 		jsr beep
-		jsr beep
+		lda #2
+		jsr display_delay
 		RTS
 .endproc
 

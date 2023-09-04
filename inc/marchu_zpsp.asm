@@ -190,8 +190,6 @@ wha:	JMP wha			; should not get here?
 bad_msg:.apple2sz "BAD BIT   "
 	bad_msg_len = * - bad_msg
 
-hex_tbl:.apple2sz "0123456789ABCDEF"
-
 zp_good:
 
 
@@ -216,12 +214,26 @@ zp_good:
 		LDY #0
 	wr:	LDA tst_tbl,X	; get the test value into A
 		STA $0100,Y		; write to the banks
+		LDA $00,Y			; check the zp address
+		BNE bank_error
 		STA $0200,Y
+		LDA $00,Y			; check the zp address
+		BNE bank_error
 		STA $0400,Y
+		LDA $00,Y			; check the zp address
+		BNE bank_error
 		STA $0800,Y
+		LDA $00,Y			; check the zp address
+		BNE bank_error
 		STA $1000,Y
+		LDA $00,Y			; check the zp address
+		BNE bank_error
 		STA $2000,Y
+		LDA $00,Y			; check the zp address
+		BNE bank_error
 		STA $4000,Y
+		LDA $00,Y			; check the zp address
+		BNE bank_error
 		STA $8000,Y
 		LDA $00,Y			; check the zp address
 		BNE bank_error
