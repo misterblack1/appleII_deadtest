@@ -189,16 +189,16 @@ FIRST_PAGE = $02
 		; beq report_good
 		pha
 		jsr show_banner
-		puts_centered_at TXTLINE23, "RAM ERROR: $XX AT $XXXX"
+		puts_centered_at TXTLINE24, "RAM ERROR: $XX AT $XXXX"
 
-		m_con_goto TXTLINE23,20
+		m_con_goto TXTLINE24,20
 		pla
 		jsr con_put_hex
 
-		m_con_goto TXTLINE23,27
+		m_con_goto TXTLINE24,27
 		lda mu_ptr_hi
 		jsr con_put_hex
-		m_con_goto TXTLINE23,29
+		m_con_goto TXTLINE24,29
 		lda mu_ptr_lo
 		jsr con_put_hex
 
@@ -212,7 +212,7 @@ FIRST_PAGE = $02
 		lda #$FF		; period
 		jsr beep
 
-		LDA #20
+		LDA #30
 		jsr display_delay
 		rts
 .endproc
@@ -220,7 +220,7 @@ FIRST_PAGE = $02
 .proc	report_good
 		; jmp report_bad
 		jsr show_banner
-		puts_centered_at TXTLINE23, "RAM TEST OK"
+		puts_centered_at TXTLINE24, "RAM TEST OK"
 		ldx #$20		; cycles
 		lda #$80		; period
 		jsr beep

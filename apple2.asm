@@ -40,7 +40,7 @@ romstart:
 		JSR count_ram	; count how much RAM is installed
 
 		jsr show_banner
-		puts_centered_at TXTLINE23, "ZERO/STACK PAGES OK"
+		puts_centered_at TXTLINE24, "ZERO/STACK PAGES OK"
 
 		ldx #$40		; cycles
 		lda #$80		; period
@@ -85,11 +85,10 @@ loop:	PHA
 
 
 .include "inc/marchu.asm"
-
 .include "inc/a2console.asm"
 
-; tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
-tst_tbl:.BYTE $80 ; while debugging, shorten the test value list
+tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
+; tst_tbl:.BYTE $80 ; while debugging, shorten the test value list
 	tst_tbl_end = *
 	; 	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
 	; 	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
