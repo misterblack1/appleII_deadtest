@@ -1,43 +1,55 @@
 # Apple II Dead Test RAM Diagnostic ROM
 Recently while fixing an Apple II+ clone, I was annoyed there seemed to be no diagnostic ROMs available for the Apple II that could test the RAM without using RAM. 
 
-This ROM is a result of that. I started with a base of the C64 "Dead Test" ROM, porting that over to the Apple II and adjusted the functionality of the initial phase of that ROM. The main thing that makes this test great is it does NOT rely on DRAM at all. It runs entirely inside the ROM and does not use the ZERO PAGE ($00-$FF) or the stack ($100-$1FF.) All the other tests I found use that part of RAM, which isn't helpful if you have bad RAM in that part of the system.
+This ROM is a result of that frustration.
 
-![Success](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/4K-test.png?raw=true)
+This all began as a quick test ROM whipped up by Frank (IZ8DWF) that simply displayed full screens of characters in text mode, all without using zero page. 
 
-Note: It does use the ZERO PAGE at the end to print the message about the RAM being good. See below.
+I then wanted to do more, so I found disassembled code for the C64 "Dead Test" ROM on World Of Janni, and ported that to the Apple II. I had to adjusted the functionality of the initial phase of that ROM to work with the Apple II, but it actually worked even with my very limited assembly skills. The main thing that makes this test great is it does NOT rely on DRAM at all. It runs entirely inside the ROM and does not use the ZERO PAGE ($00-$FF) or the stack ($100-$1FF.) All the other tests I found for the Apple II use Zero Page and stack, which is useless if you have DRAM problems in the first bank of memory. 
+
+The biggest problem with the C64 dead test is the diagnostic is a very simply RAM test that simply filled up the first several pages of RAM with simple patters. It will mis a lot of problems and also can be fooled by many issues.
+
+So that's where David took over the work -- and at this point, very little of the original code from Frank or the C64 Dead test code exists. 
 
 Here is how it works:
 
 * Upon power up of the machine, it'll beep the speaker to indicate things are working.
-* It will then procede to fill the first 4K of RAM with these bytes $00,$55,$AA,$FF,$01,$02,$04,$08,$10,$20,$40,$80,$FE,$FD,$FB,$F7,$EF,$DF,$BF,$7F (in reverse order)
-* Since it is filling the first 4K, that includes the text mode screen buffer, so you will see it running! (Unlike the C64 dead test)
-* Between each byte, it will wait a little bit in order to catch refresh problems, bit rot, etc.
-* It then goes back and reads the 4K of RAM and compares to the written byte, and if any bits are wrong, it'll just to the error handler.
-* If all the bits look good, it will clear the screen, beep again and print a message saying the first 4K of RAM is ok.
-* If there are problems with the bits, it will detect the issue and let you knwo the bit is bad.
-* It does this by alternating the screen between HGR (high res) and GR (low res graphings) n times where n is the bit that is bit. It will also tick the speaker the n times, in case your screen isn't working.
-* So if bit 7 is bad, you will get 8 flashes and ticks, followed by a pause, then it will flash/tick 8 times again.
+* The ROM will test the zero page and stack using a March-U test, one of the best RAM tests available. This will catch page errors within the first page, and if any issues are detected, it will beep out an error code to indicate which bit is bad. (More on this further down.)
+* Next the ROM will do a quick test for page errors inside the RAM. This is a subtle issue that can fool many RAM tests. For the rest of the test to run, we need fully functional Zero page and stack, and if these will get corrupted by a page error, this will cause the ROM to crash.
+* The page error test work by by writing $00 to address $0000 (inside zerp page) and then writing $FF to $0100, $0200, $0400, $0800, $1000, $2000, $4000, and $8000. If when writing $FF to those locations the $00 at location $0000 is disturbed, then we have a page error and must halt. (There is a bit more going on, but it's not relevant)
+* The ROM should beep out which RAM bit is bad with another possible outcome being a logic problem on the motherboard. (To-do, does this work?)
+* The next phase is to detect how much RAM is installed in the Apple II. Possible configurations are 4k, 8k, 12k, 16k, 32k, 48k and a couple other configs. Currently this test does NOT test above 48k.
+* The ROM will print a banner showing how much RAM is detected and that the Zero Page is good.
+* It will then procede to do March-U RAM test on all of the RAM (minus the zero Page and stack, which are used to run the diagnostic ROM.)
+* A full test of 48k takes about 1 minute 30 seconds.
+* When all RAM passes, you will get an all good message, and the test will run again.
 
-To decode the flashes:
-* Bit 0 error -> 1 flash
-* Bit 1 error -> 2 flashes
-* Bit 2 error -> 3 flashes
-* Bit 3 error -> 4 flashes
-* ...
-* Bit 7 error -> 8 flashes
+If an error is detected in the zero page or stack, it will beep out the bit that is bad.
+
+1 beep = D0 problem, this is the RAM chip at C3
+2 beeps = D1 problem, this is the RAM chip at C4
+3 beeps = D2 problem, this is the RAM chip at C5
+4 beeps = D3 problem, this is the RAM chip at C6
+5 beeps = D4 problem, this is the RAM chip at C7
+6 beeps = D5 problem, this is the RAM chip at C8
+7 beeps = D6 problem, this is the RAM chip at C9
+8 beeps = D7 problem, this is the RAM chip at C10
+
+If an error is detected in the memory above zerp page and stack, the system will display a grid showing you where the bit errors are:
+
+[insert picture and describe how to decode the error]
 
 Limitations: 
 * This ROM is designed as a troubleshooting aid only.
 * An indicated bit error from this test does not mean the DRAM is faulty, it means the CPU is unable to correctly see the bit it expects from the DRAM. This could be caused by a bad RAM chip or other faults on the system.
 * The RAM subsystem on the Apple II is more complex than that of other contemporary 8-bit systems of the time, so many components in that subsystem can cause indicated bit errors.
-* The Apple II has a dedicated DRAM output bus that is used to display text/graphics, and this bus is connected to the CPU data bus as needed.
+* The Apple II has a dedicated DRAM output bus that is used to display text/graphics, and this bus is connected to the CPU data bus as needed via some logic chips.
 * Please keep in mind is that it will only flash the first bit it saw as wrong, starting at bit 7 (8 flashes.) So if you have multiple bad chips, the highest bad bit will usually win and flash. Change that chip and run again.
 * Remember that each bit of DRAM in each bank is parallel with the other banks, so even if the test is running on the first 4K of RAM, you could have a bad chip in an adjacent bank causing a bit error in the first 4K. 
 
 To use this ROM:
-* It is designed to run in the F8 ROM socket on the Apple II, Apple II+ or Apple ROM card.
-* Since Apple uses 2316 (2K) mask ROMs on their motherboard, you will need an adapter to use an EPROM in any of these sockets. (Make one or use a PCB)
+* It is designed to run in the F8 ROM socket on the Apple II, Apple II+, language card or Apple ROM card.
+* Since Apple uses 2316 (2K) mask ROMs on their motherboard and on the Apple ROM card, you will need an adapter to use an EPROM in any of these sockets. (Make one or use a PCB)
 * IIe can use a 2764 (8K) that holds EF ROM, so you can load this F8 ROM into the top of the chip ($1800)
 * Platinum //e has CF ROM which is a 27128 (16K) so you would load this F8 ROM into the top of the chip ($3800)
 * IIc ROM is 27256 (32k) and we have not tested this on the IIc
@@ -45,13 +57,12 @@ To use this ROM:
 ![ROM adapter in card](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/Screen%20Shot%202023-08-27%20at%207.45.43%20PM.png?raw=true)
 
 To assemble the ROM:
-* Install XA on your computer using some package manager (apt-get xa)
-* Compile it with xa -C apple2-deadtest.asm -o 341-0020-00.f8
+* apt-get install cc65 make
+* Then download the code from the repo and run "make"
 
 Thanks: 
 * World of Jani for sharing disassembled C64 dead test code.
 * IZ8DWF for guidance on this along with some of his ROR-test code for printing a messagae to screen.
-
-Code assembled on xa (xa65) v2.3.8 Written by Andre Fachat, Jolse Maginnis, David Weinehall and Cameron Kaiser
+* David for all the amazing work on this rom!
 
 See C64 Dead Test ROM here: http://blog.worldofjani.com/?p=164
