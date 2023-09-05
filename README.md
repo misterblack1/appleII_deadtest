@@ -25,14 +25,16 @@ So that's where David took over the work -- and at this point, very little of th
 
 ### If an error is detected in the zero page or stack, it will beep out the bit that is bad.
 
-`1 beep = D0 problem, this is the RAM chip at C3
+```
+1 beep = D0 problem, this is the RAM chip at C3
 2 beeps = D1 problem, this is the RAM chip at C4
 3 beeps = D2 problem, this is the RAM chip at C5
 4 beeps = D3 problem, this is the RAM chip at C6
 5 beeps = D4 problem, this is the RAM chip at C7
 6 beeps = D5 problem, this is the RAM chip at C8
 7 beeps = D6 problem, this is the RAM chip at C9
-8 beeps = D7 problem, this is the RAM chip at C10`
+8 beeps = D7 problem, this is the RAM chip at C10
+```
 
 ### If an error is detected in the memory above zerp page and stack, the system will display a grid showing you where the bit errors are:
 
