@@ -1,7 +1,7 @@
 Adrian's wishlist:
-* Longer pause after all RAM good. 5 seconds?
+* DONE ** Longer pause after all RAM good. 5 seconds?
 * After ZP/stack test, when printing the welcome banner with RAM size, could we print all 255 characters on screen as well?
   This will let people know if their character generator supports lower-case or not. 
 * Welcome screen should print may want to add the message "Bank error reports accurate for Apple ][ and ][+"
-* Beep out bank error and bit error, in case screen isn't working
+* DONE ** Beep out bank error and bit error, in case screen isn't working
 
