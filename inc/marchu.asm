@@ -9,8 +9,7 @@
 		mu_page_start:	.res 1
 		mu_test_idx:	.res 1
 		scratch:		.res 2
-		; results:		.res 48*4
-		results:		.res $10
+		results:		.res 48*4
 		zpe = *
 .out .sprintf("    results = $%04x, zpe = $%04x ",results,zpe)
 .code

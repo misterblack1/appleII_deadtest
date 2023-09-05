@@ -6,7 +6,7 @@ MAME = $(HOME)/Downloads/mame0257-arm64/mame
 OUTPUT = apple2.bin
 
 ASSEMBLE_xa = xa -C -M -o
-ASSEMBLE_sa = cl65 -t apple2 -C none.cfg -I ./inc -l $(<:%.asm=%.lst)
+ASSEMBLE_sa = cl65 -t apple2 -C a2_f8rom.cfg -I ./inc -l $(<:%.asm=%.lst)
 
 ASSEMBLE = $(ASSEMBLE_sa)
 

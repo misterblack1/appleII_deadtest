@@ -124,5 +124,6 @@ pe_end:
 	.res ($FFFA-endofrom), $FF ; fills the unused space with $FF 
 
 ; vectors
-	.org $FFFA
+	; .org $FFFA
+.segment "VECTORS"
 	.word	romstart,romstart,romstart
