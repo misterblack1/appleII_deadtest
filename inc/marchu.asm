@@ -224,13 +224,15 @@ FIRST_PAGE = $02
 		jsr show_banner
 
 		; puts_centered_at TXTLINE1, "RESULTS"
-		puts_at TXTLINE1+5, "BANK 0 ---- BANK 1 ---- BANK 2 ---- "
+		; puts_at TXTLINE1+5, "BANK 0 ---- BANK 1 ---- BANK 2 ---- "
+		puts_at TXTLINE1, "GITHUB.COM/MISTERBLACK1/APPLEII_DEADTEST"
+		puts_at TXTLINE3, "PAGE"
 
 		ldx #15
 	next_head_line:
 		txa				; go to the correct line
 		clc
-		adc #3
+		adc #4			; start on this line
 		tay
 		lda #0
 		jsr con_goto
@@ -257,7 +259,7 @@ FIRST_PAGE = $02
 		lda columns,Y
 		pha				; save the column number on the stack
 
-		ldy #1			; print the heading row
+		ldy #2			; print the heading row
 		jsr con_goto
 		txa
 		jsr con_put_hex
@@ -270,7 +272,7 @@ FIRST_PAGE = $02
 		txa				; calculate the line number on the screen
 		and #$0F		; 16 lines of results
 		clc
-		adc #3			; offset by starting line
+		adc #4			; offset by starting line
 		tay				; put line into Y
 
 		pla				; retrieve column into A

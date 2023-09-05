@@ -11,6 +11,8 @@
 		LDX #length
 outer:	LDY #period
 inner:	DEY
+		nop
+		nop
 		BNE inner
 		STA SPKR
 		DEX
@@ -47,7 +49,7 @@ inner:	DEY
 
 .macro	inline_cls
 		LDA #$A0	 	; A0 is the black character on the Apple II and II plus
-		LDY $FF			; clear the screen
+		LDY #$00			; clear the screen
 	:	DEY
 		STA $0400,Y		
 		STA $0500,Y		

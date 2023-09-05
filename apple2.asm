@@ -60,9 +60,9 @@ test_ram:
 
 .proc	show_banner
 		jsr con_cls
-		puts_centered_at TXTLINE21, "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
-		puts_centered_at TXTLINE22, "TESTING RAM FROM $0200 TO $XXFF"
-		m_con_goto TXTLINE22, 31
+		puts_centered_at TXTLINE22, "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
+		puts_centered_at TXTLINE23, "TESTING RAM FROM $0200 TO $XXFF"
+		m_con_goto TXTLINE23, 31
 		LDA mu_page_end
 		SEC
 		SBC #1
@@ -98,9 +98,9 @@ hex_tbl:.apple2sz "0123456789ABCDEF"
 zp_msg:
 		.apple2sz "TEST ZERO PAGE"
 zp_end = *
-pt_msg:
-		.apple2sz "TEST PAGE ERRORS"
-pt_end:
+; pt_msg:
+; 		.apple2sz "TEST PAGE ERRORS"
+; pt_end:
 pe_msg:
 		.apple2sz "PAGE ERRORS FOUND"
 pe_end:
