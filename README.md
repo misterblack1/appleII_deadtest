@@ -11,8 +11,7 @@ The biggest problem with the C64 dead test is the diagnostic is a very simply RA
 
 So that's where David took over the work -- and at this point, very little of the original code from Frank or the C64 Dead test code exists. 
 
-Here is how it works:
-
+## Here is how it works:
 * Upon power up of the machine, it'll beep the speaker to indicate things are working.
 * The ROM will test the zero page and stack using a March-U test, one of the best RAM tests available. This will catch page errors within the first page, and if any issues are detected, it will beep out an error code to indicate which bit is bad. (More on this further down.)
 * Next the ROM will do a quick test for page errors inside the RAM. This is a subtle issue that can fool many RAM tests. For the rest of the test to run, we need fully functional Zero page and stack, and if these will get corrupted by a page error, this will cause the ROM to crash.
@@ -24,22 +23,22 @@ Here is how it works:
 * A full test of 48k takes about 1 minute 30 seconds.
 * When all RAM passes, you will get an all good message, and the test will run again.
 
-If an error is detected in the zero page or stack, it will beep out the bit that is bad.
+### If an error is detected in the zero page or stack, it will beep out the bit that is bad.
 
-1 beep = D0 problem, this is the RAM chip at C3
+`1 beep = D0 problem, this is the RAM chip at C3
 2 beeps = D1 problem, this is the RAM chip at C4
 3 beeps = D2 problem, this is the RAM chip at C5
 4 beeps = D3 problem, this is the RAM chip at C6
 5 beeps = D4 problem, this is the RAM chip at C7
 6 beeps = D5 problem, this is the RAM chip at C8
 7 beeps = D6 problem, this is the RAM chip at C9
-8 beeps = D7 problem, this is the RAM chip at C10
+8 beeps = D7 problem, this is the RAM chip at C10`
 
-If an error is detected in the memory above zerp page and stack, the system will display a grid showing you where the bit errors are:
+### If an error is detected in the memory above zerp page and stack, the system will display a grid showing you where the bit errors are:
 
 [insert picture and describe how to decode the error]
 
-Limitations: 
+## Limitations: 
 * This ROM is designed as a troubleshooting aid only.
 * An indicated bit error from this test does not mean the DRAM is faulty, it means the CPU is unable to correctly see the bit it expects from the DRAM. This could be caused by a bad RAM chip or other faults on the system.
 * The RAM subsystem on the Apple II is more complex than that of other contemporary 8-bit systems of the time, so many components in that subsystem can cause indicated bit errors.
@@ -47,7 +46,7 @@ Limitations:
 * Please keep in mind is that it will only flash the first bit it saw as wrong, starting at bit 7 (8 flashes.) So if you have multiple bad chips, the highest bad bit will usually win and flash. Change that chip and run again.
 * Remember that each bit of DRAM in each bank is parallel with the other banks, so even if the test is running on the first 4K of RAM, you could have a bad chip in an adjacent bank causing a bit error in the first 4K. 
 
-To use this ROM:
+## To use this ROM:
 * It is designed to run in the F8 ROM socket on the Apple II, Apple II+, language card or Apple ROM card.
 * Since Apple uses 2316 (2K) mask ROMs on their motherboard and on the Apple ROM card, you will need an adapter to use an EPROM in any of these sockets. (Make one or use a PCB)
 * IIe can use a 2764 (8K) that holds EF ROM, so you can load this F8 ROM into the top of the chip ($1800)
@@ -56,11 +55,11 @@ To use this ROM:
 
 ![ROM adapter in card](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/Screen%20Shot%202023-08-27%20at%207.45.43%20PM.png?raw=true)
 
-To assemble the ROM:
+## To assemble the ROM:
 * apt-get install cc65 make
 * Then download the code from the repo and run "make"
 
-Thanks: 
+## Thanks: 
 * World of Jani for sharing disassembled C64 dead test code.
 * IZ8DWF for guidance on this along with some of his ROR-test code for printing a messagae to screen.
 * David for all the amazing work on this rom!
