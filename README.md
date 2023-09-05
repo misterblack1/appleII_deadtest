@@ -53,11 +53,13 @@ To understand how to decode the grid, it will show all of the pages that contain
 The II and II+ motherboards have their DRAM laid out like this:
 
 ```
-  3  4  5  6  7  8  9  10
-E D0 D1 D2 D3 D4 D5 D6 D7 E   RAM from $8000 to $BFFF (pages $80 to $BF)
-D D0 D1 D2 D3 D4 D5 D6 D7 D   RAM from $4000 to $7FFF (pages $40 to $7F)
-C D0 D1 D2 D3 D4 D5 D6 D7 C   RAM from $0000 to $3FFF (pages $00 to $3F)
-  3  4  5  6  7  8  9  10
+D0 through D7 is the processor data line
+
+                  ROW 3  4  5  6  7  8  9  10 ROW
+Pages $80 to $BF   E  D0 D1 D2 D3 D4 D5 D6 D7  E   RAM from $8000 to $BFFF
+Pages $40 to $7F   D  D0 D1 D2 D3 D4 D5 D6 D7  D   RAM from $4000 to $7FFF
+Pages $00 to $3F   C  D0 D1 D2 D3 D4 D5 D6 D7  C   RAM from $0000 to $3FFF 
+                  ROW 3  4  5  6  7  8  9  10 ROW
 ```
 For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (There is no way for us to make a beep code for 0, which is why D0-D7 is represented by Bit 1 - 8.
 
