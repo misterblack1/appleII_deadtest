@@ -113,6 +113,7 @@
 ; params:
 ; A = column
 ; Y = row
+; doesn't touch X
 .proc con_goto
 		pha					; save A
 		tya

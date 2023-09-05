@@ -5,6 +5,7 @@
 		.byte 0
 .endmacro
 
+; doesn't modify A
 .macro	inline_beep_xy length, period
 		.local outer, inner
 		LDX #length

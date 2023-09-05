@@ -8,10 +8,9 @@
 		mu_page_end:	.res 1
 		mu_page_start:	.res 1
 		mu_test_idx:	.res 1
+		all_errs:		.res 1
 		scratch:		.res 2
 		results:		.res 48*4
-		zpe = *
-.out .sprintf("    results = $%04x, zpe = $%04x ",results,zpe)
 .code
 
 FIRST_PAGE = $02
@@ -19,7 +18,7 @@ FIRST_PAGE = $02
 
 .proc	count_ram
 		; Count RAM.  Check start of every 4K block.
-		; Reads from empty locations return $FF
+		; Reads from empty locations return $FF regardless of what was written there.
 		LDA #0
 		STA count_ptr		; low bits.  High are at mu_page_end
 
@@ -29,14 +28,12 @@ FIRST_PAGE = $02
 		STA mu_page_end		; use it as the page number in the scratch pointer
 		LDA #0
 		STA (count_ptr),Y	; store 0 at the start of the page
-		; CMP (count_ptr),Y	; see if it stuck.  If no RAM there, will return $FF
-		; BNE found			; XXX (should we check only for $FF) if no match, we found the end of RAM
-		LDA (count_ptr),Y
-		CMP #$FF
+		LDA (count_ptr),Y	; if no RAM there, will return $FF
+		CMP #$FF			; if $FF we found the end of RAM
 		BEQ found
-		DEX
+		DEX					; try next location
 		BPL lp
-		LDA #$C0				; if not yet found, it's 48K
+		LDA #$C0			; if not yet found, it's 48K.  Don't want to probe at $C000.
 		STA mu_page_end
 	found:
 		RTS
@@ -45,9 +42,23 @@ FIRST_PAGE = $02
 		sizes_end = *
 .endproc
 
+.proc	init_results
+		lda #0
+		sta all_errs
+		tya
+	lp: sta results,Y
+		iny
+		bne lp
+		rts
+.endproc
+
 ; marchU
 ; returns bitmask of bad bits in A
 .proc 	marchU
+		sta TXTCLR			; use graphics
+        sta HIRES 			; set high res
+		sta MIXSET			; mixed mode on
+
 		LDA #FIRST_PAGE		; set starting address (maybe change later to a parameter?)
 		STA mu_page_start
 
@@ -63,6 +74,13 @@ FIRST_PAGE = $02
 		TAX					; X will contain the test val throughout marchU
 		LDA mu_page_start
 		STA mu_ptr_hi
+
+		; lda #08
+		; sta results+$19
+		; lda #01
+		; sta results+$A1
+		; sta all_errs
+		; jmp show_report		; simulate a run with canned errors
 
 ; In the descriptions below:
 ;	up: 	perform the test from low addresses to high ones
@@ -133,11 +151,15 @@ FIRST_PAGE = $02
 		DEC mu_ptr_hi	; start at the end page minus one
 		JMP continue3
 
-	bad: JMP report_bad
-		; STY mu_ptr_lo	; save the offset with the bad location
-		; LDY mu_ptr_hi	; get the page number as index into results array
-		; ORA results,Y	; collect any bad bits
-		; JMP next
+	bad: 
+		; JMP report_bad
+		; STY mu_ptr_lo	; XXX (needed?) save the offset with the bad location
+		LDY mu_ptr_hi	; get the page number as index into results array
+		ORA results,Y	; collect any bad bits
+		STA results,Y	; store the accumulated errors back to the results array
+		ORA all_errs	; also store one value that collects all of the bad bits found
+		STA all_errs
+		JMP next
 
 	continue3:
 		LDY #$FF		; start at FF and count down
@@ -188,8 +210,8 @@ FIRST_PAGE = $02
 		DEX
 		STX mu_test_idx
 
-		; BMI show_report	; we're with all values, so show results
-		BMI report_good		; out of test values, declare it good
+		BMI show_report	; we're done with all values, so show results
+		; BMI report_good		; out of test values, declare it good
 
 		JMP init		; else go to next test value
 	; good:
@@ -198,25 +220,111 @@ FIRST_PAGE = $02
 .endproc
 
 .proc	show_report
+		sta TXTSET 		; turn on text
+		jsr show_banner
+
+		; puts_centered_at TXTLINE1, "RESULTS"
+		puts_at TXTLINE1+5, "BANK 0 ---- BANK 1 ---- BANK 2 ---- "
+
+		ldx #15
+	next_head_line:
+		txa				; go to the correct line
+		clc
+		adc #3
+		tay
+		lda #0
+		jsr con_goto
+		txa
+		jsr con_put_hex
+		lda #'_'|$80
+		ldy #0
+		sta (con_loc),Y
+		lda #':'|$80
+		ldy #2
+		sta (con_loc),Y
+		dex
+		bpl next_head_line
+
+
+		LDX #0
+	next_page:
+		txa				; calculate the column
+		lsr				; get the high nybble
+		lsr
+		lsr
+		lsr
+		tay				; get the column offset from table
+		lda columns,Y
+		pha				; save the column number on the stack
+
+		ldy #1			; print the heading row
+		jsr con_goto
+		txa
+		jsr con_put_hex
+		inc con_loc
+		lda #'_'|$80
+		ldy #0
+		sta (con_loc),Y
+
+
+		txa				; calculate the line number on the screen
+		and #$0F		; 16 lines of results
+		clc
+		adc #3			; offset by starting line
+		tay				; put line into Y
+
+		pla				; retrieve column into A
+		jsr con_goto	; move to that location on screen
+
+		lda results,X	; get the value to print
+		bne	hex			; see if there's an error
+		lda #'-'|$80	; if not, print dashes
+		ldy #0
+		sta (con_loc),Y ; put two dashes there
+		iny
+		sta (con_loc),Y
+		jmp next
+
+	hex:				; print a hex value
+		jsr con_put_hex
+
+	next:
+		INX				; look for the next page
+		TXA				; compare to the last page to test
+		cmp mu_page_end
+		bne next_page	; continue if there are more to print
+
+		lda all_errs
+		beq good
+		jsr report_bad
+		jmp done
+	good:
+		jsr report_good
+
+	done:
+		LDA #10
+		jsr delay_seconds
+		jmp marchU
+
+		columns: .byte 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38
 .endproc
 
+
 .proc	report_bad
-		; cmp #0
-		; beq report_good
-		pha
-		jsr show_banner
-		puts_centered_at TXTLINE24, "RAM ERROR: $XX AT $XXXX"
+		; pha
+		; jsr show_banner
+		; puts_centered_at TXTLINE24, "RAM ERROR: $XX AT $XXXX"
 
-		m_con_goto TXTLINE24,20
-		pla
-		jsr con_put_hex
+		; m_con_goto TXTLINE24,20
+		; pla
+		; jsr con_put_hex
 
-		m_con_goto TXTLINE24,27
-		lda mu_ptr_hi
-		jsr con_put_hex
-		m_con_goto TXTLINE24,29
-		lda mu_ptr_lo
-		jsr con_put_hex
+		; m_con_goto TXTLINE24,27
+		; lda mu_ptr_hi
+		; jsr con_put_hex
+		; m_con_goto TXTLINE24,29
+		; lda mu_ptr_lo
+		; jsr con_put_hex
 
 		ldx #$20		; cycles
 		lda #$80		; period
@@ -228,15 +336,14 @@ FIRST_PAGE = $02
 		lda #$FF		; period
 		jsr beep
 
-		LDA #30
-		jsr display_delay
+		; LDA #15
+		; jsr delay_seconds
 		rts
 .endproc
 
 .proc	report_good
-		; jmp report_bad
-		jsr show_banner
-		puts_centered_at TXTLINE24, "RAM TEST OK"
+		; jsr show_banner
+		; puts_centered_at TXTLINE24, "RAM TEST OK"
 		ldx #$20		; cycles
 		lda #$80		; period
 		jsr beep
@@ -246,8 +353,8 @@ FIRST_PAGE = $02
 		ldx #$00		; cycles
 		lda #$20		; period
 		jsr beep
-		lda #10
-		jsr display_delay
+		; lda #10
+		; jsr delay_seconds
 		RTS
 .endproc
 
@@ -267,8 +374,3 @@ inner:	nop
 		rts
 .endproc
 
-; .data
-; 	; memtest patterns to cycle through
-; tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
-; ; tst_tbl:.BYTE $FF ; while debugging, shorten the test value list
-; 	tst_tbl_end = *

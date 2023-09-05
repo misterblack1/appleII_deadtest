@@ -74,7 +74,7 @@ marchU2delay:
 		inline_delay_cycles_ay 10000
 		JMP continue
 
-zp_bad:	JMP findbit
+zp_bad:	JMP zp_error
 
 continue:
 		LDY #$FF		; reset Y to $FF and count down
@@ -131,18 +131,59 @@ marchup:
 
 
 
+
+
 ; A contains the bits (as 1) that were found to be bad
 ; Y contains the address (offset) of the address where bad bit(s) were found
+
+
+.proc zp_error
 findbit:LDX #8			; start at high bit
 		CLC				; clear carry
 chkbit:	ROL				; move tested bit into carry
-		BCS flasherr	; bit set, display it
+		BCS do_flashing	; bit set, display it
 		DEX				; count down
 		BNE chkbit		; test next bit
 wha:	JMP wha			; should not get here?
 
+	; 	TAX				; bat bit mask is in A, save it to X
+	; 	TXS  			; then save it in the SP
 
-.proc flasherr			; time to flash the screen
+	; 	STA TXTSET		; text mode
+	; 	STA LOWSCR		; page 2 off
+	; 	inline_cls
+	; 	inline_print bad_msg, $0750
+
+	; 	TSX				; retrieve the test value
+	; 	TXA
+	; 	LDY #0
+	; print_bit:
+	; 	asl				; get top bit into carry flag
+	; 	tax				; save the current value
+	; 	lda #'0'|$80
+	; 	adc #0			; increment by one if we had a carry
+	; 	sta $0759,Y		; print bit to screen
+	; 	txa
+	; 	iny
+	; 	cpy #8
+	; 	bne print_bit	; repeat 8 times
+
+	; ; find the bit to beep out
+	; 	tsx				; get the bad bit mask back into A
+	; 	txa
+	; 	LDX #1			; count up
+	; page_chkbit:	
+	; 	LSR				; move lowest bit into carry
+	; 	BCS start_beeping	; bit set, display it
+	; 	inx				; count down
+	; 	cpx #$09
+	; 	bne page_chkbit	; test next bit
+	; wha:JMP wha			; only get here if there was no bad bit
+
+
+
+
+	do_flashing:
 		TXS  			; X is holding the bad bit, save it in the SP
 
 		; XXX HACK: print the bank number on the bottom line
@@ -187,18 +228,10 @@ wha:	JMP wha			; should not get here?
 		JMP flash_byte
 .endproc
 
-bad_msg:.apple2sz "BAD BIT   "
+bad_msg:.apple2sz "ZP/SP ERR"
 	bad_msg_len = * - bad_msg
 
 zp_good:
-
-
-; .macro _test_bank addr
-; 		LDX #<addr		; record what bank we're on
-; 		STA addr		; write to that bank
-; 		LDY $00			; check the ZP location
-; 		BNE page_error
-; .endmacro
 
 		inline_print pt_msg, TXTLINE21+((40-(pt_end-pt_msg-1))/2)
 
@@ -210,53 +243,136 @@ zp_good:
 		BNE wz
 
 	wr:	LDA #$FF
-		STA $0100,Y		; write to the banks
+		STA $0100,Y		; write to the pages
 		LDA $00,Y			; check the zp address
-		BNE bank_error
+		BNE page_error
 		LDA #$FF
 		STA $0200,Y
 		LDA $00,Y			; check the zp address
-		BNE bank_error
+		BNE page_error
 		LDA #$FF
 		STA $0400,Y
 		LDA $00,Y			; check the zp address
-		BNE bank_error
+		BNE page_error
 		LDA #$FF
 		STA $0800,Y
 		LDA $00,Y			; check the zp address
-		BNE bank_error
+		BNE page_error
 		LDA #$FF
 		STA $1000,Y
 		LDA $00,Y			; check the zp address
-		BNE bank_error
+		BNE page_error
 		LDA #$FF
 		STA $2000,Y
 		LDA $00,Y			; check the zp address
-		BNE bank_error
+		BNE page_error
 		LDA #$FF
 		STA $4000,Y
 		LDA $00,Y			; check the zp address
-		BNE bank_error
+		BNE page_error
 		LDA #$FF
 		STA $8000,Y
 		LDA $00,Y			; check the zp address
-		BNE bank_error
+		BNE page_error
 		LDA #$FF
 		INY
 		BNE wr
 
-		JMP bank_ok
+		lda #$FF				; simulate error
+		jmp page_error
+
+		JMP page_ok
 .endproc
 
-.proc bank_error
-		inline_print pe_msg, TXTLINE21+((40-(pe_end-pe_msg-1))/2)
+.proc page_error
+		TAX				; bat bit mask is in A, save it to X
+		TXS  			; then save it in the SP
 
-loop:	inline_beep_xy $40, $80
-		LDX #$40
-		LDY #$00
+		STA TXTSET		; text mode
+		sta MIXSET		; mixed mode on
+		STA LOWSCR		; page 2 off
+		inline_cls
+		inline_print bad_page_msg, $0750
+
+		TSX				; retrieve the test value
+		TXA
+		LDY #0
+	print_bit:
+		asl				; get top bit into carry flag
+		tax				; save the current value
+		lda #'0'|$80
+		adc #0			; increment by one if we had a carry
+		sta $0759,Y		; print bit to screen
+		txa
+		iny
+		cpy #8
+		bne print_bit	; repeat 8 times
+
+	; find the bit to beep out
+		tsx				; get the bad bit mask back into A
+		txa
+		cmp #$FF		; if it's FF, it's a motherboard error
+		beq mb_err
+		LDX #1			; count up
+	page_chkbit:	
+		LSR				; move lowest bit into carry
+		BCS start_beeping	; bit set, display it
+		inx				; count down
+		cpx #$09
+		bne page_chkbit	; test next bit
+	wha:JMP wha			; only get here if there was no bad bit
+
+	mb_err:
+		ldx #$FF		; note this special case
+
+	start_beeping:
+; now X contains the index of the bit, starting at 1
+		txs				; save the bit index of the top set bit into SP
+	beeploop:
+		lda #5
+	type_beep:					; beep an annoying chirp to indicate page err
+		ldy #0
+		ldx #20
 		inline_delay_xy
-		JMP loop
+		inline_beep_xy $40, $80
+		sec
+		sbc #1
+		bpl type_beep
+	
+		tsx					; fetch the bit number
+		txa
+		cmp #$FF
+		beq beeploop		; continuous beeping for MB error
+	bit_beep:
+		LDX #$7F			; pause with low res on
+        LDY #$00
+		inline_delay_xy 2
+		STA TXTCLR 			; turn on graphics
+		inline_beep_xy $FF, $FF
+		STA TXTSET			; text mode
+		sec
+		sbc #1
+		bne bit_beep
+
+		LDX #$FF			; pause betwen beeping
+		LDY #$FF
+		inline_delay_xy 4
+
+		JMP beeploop
+
+bad_page_msg:.apple2sz "PAGE ERR"
+	bad_page_msg_len = * - bad_page_msg
+
+
+
+; 		inline_print pe_msg, TXTLINE21+((40-(pe_end-pe_msg-1))/2)
+
+; loop:	inline_beep_xy $40, $80
+; 		LDX #$40
+; 		LDY #$00
+; 		inline_delay_xy
+; 		JMP loop
 .endproc
 
-bank_ok:
+page_ok:
 .endscope

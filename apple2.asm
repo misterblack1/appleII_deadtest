@@ -49,12 +49,10 @@ romstart:
 		lda #$40		; period
 		jsr beep
 
-		LDA #8
-		JSR display_delay
-		sta TXTCLR		; use graphics
-        sta HIRES 		; set high res
-		sta MIXSET		; mixed mode on
+		LDA #4
+		JSR delay_seconds
 
+		jsr init_results
 test_ram:
 		JSR marchU		; run the test on RAM
 		; JSR report_ram	; report the results
@@ -72,8 +70,8 @@ test_ram:
 		rts
 .endproc
 
-.proc	display_delay
-		; LDA #4
+.proc	delay_seconds
+		asl				; double the number, since we actually count in half-seconds
 loop:	PHA
 		inline_delay_cycles_ay 500000
 		PLA
@@ -89,10 +87,7 @@ loop:	PHA
 
 tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
 ; tst_tbl:.BYTE $80 ; while debugging, shorten the test value list
-	tst_tbl_end = *
-	; 	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
-	; 	.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
-	; zp_tbl_end = *
+tst_tbl_end = *
 
 ; banner_msg: 
 ; 		.asciiz "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
