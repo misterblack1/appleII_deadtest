@@ -42,9 +42,26 @@ The test should work fine on the Apple IIe and IIc as well, but keep in mind tha
 9 beeps = Motherboard logic problem causing a page error (only possible on page error test)
 ```
 
-## If an error is detected in the main memory the system will display a grid showing you where the bit errors are
+## If an error is detected in the main memory
+The ROM will display a grid showing you where the bit errors are:
+![RAM errors detected](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/grid%20errors.jpg?raw=true)
 
-[insert picture and describe how to decode the error]
+If yo udo not see this grid, you likely have a problem with the video display circuitry on your Apple II. You must fix that first. 
+
+To understand how to decode the grid, it will show all of the pages that contain a bit error. In the above picture it is telling you:
+* Page $19 has a bit error $08 (converted to binary -> 0000 1000 or bit 4, aka D3.) This means the RAM chip in C6 is bad.
+* Page $A1 has a bit error $01 (converted to binary -> 0000 0001 or bit 1, aka D0.) This means the RAM chip in E3 is bad.
+
+The II and II+ motherboards have their DRAM laid out like this:
+
+```
+  3  4  5  6  7  8  9  10
+E D0 D1 D2 D3 D4 D5 D6 D7 E   RAM from $8000 to $BFFF (pages $80 to $BF)
+D D0 D1 D2 D3 D4 D5 D6 D7 D   RAM from $4000 to $7FFF (pages $40 to $7F)
+C D0 D1 D2 D3 D4 D5 D6 D7 C   RAM from $0000 to $3FFF (pages $00 to $3F)
+  3  4  5  6  7  8  9  10
+```
+For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (There is no way for us to make a beep code for 0, which is why D0-D7 is represented by Bit 1 - 8.
 
 ## Limitations
 * This ROM is designed as a troubleshooting aid only.
