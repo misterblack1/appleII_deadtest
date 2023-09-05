@@ -209,40 +209,41 @@ zp_good:
 		DEY
 		BNE wz
 
-		LDX #(tst_tbl_end-tst_tbl-1)	; initialize the pointer to the table of values
-
-		LDY #0
-	wr:	LDA tst_tbl,X	; get the test value into A
+	wr:	LDA #$FF
 		STA $0100,Y		; write to the banks
 		LDA $00,Y			; check the zp address
 		BNE bank_error
+		LDA #$FF
 		STA $0200,Y
 		LDA $00,Y			; check the zp address
 		BNE bank_error
+		LDA #$FF
 		STA $0400,Y
 		LDA $00,Y			; check the zp address
 		BNE bank_error
+		LDA #$FF
 		STA $0800,Y
 		LDA $00,Y			; check the zp address
 		BNE bank_error
+		LDA #$FF
 		STA $1000,Y
 		LDA $00,Y			; check the zp address
 		BNE bank_error
+		LDA #$FF
 		STA $2000,Y
 		LDA $00,Y			; check the zp address
 		BNE bank_error
+		LDA #$FF
 		STA $4000,Y
 		LDA $00,Y			; check the zp address
 		BNE bank_error
+		LDA #$FF
 		STA $8000,Y
 		LDA $00,Y			; check the zp address
 		BNE bank_error
+		LDA #$FF
 		INY
 		BNE wr
-
-		DEX				; choose the next one
-		BPL wr			; start again with next value
-
 
 		JMP bank_ok
 .endproc

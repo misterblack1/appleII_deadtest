@@ -7,13 +7,10 @@
 .code
 
 
-.proc con_goto
-		rts
-.endproc
 
-.proc con_put
-		rts
-.endproc
+; .proc con_put
+; 		rts
+; .endproc
 
 
 
@@ -37,6 +34,7 @@
 
 ; print a string with args immediately embedded after the calling function
 ; first screen location, then the string itself, zero-terminated
+; adapted from Don Lancaster's "Assembly Cookbook for the Apple II/IIe"
 .proc	con_puts_embedded
 		stx con_xsave
 		sty con_ysave
@@ -111,3 +109,27 @@
 		inline_cls
 		rts
 .endproc
+
+; params:
+; A = column
+; Y = row
+.proc con_goto
+		pha					; save A
+		tya
+		asl					; multiply Y by 2
+		tay
+		lda line_to_base,Y	; get the base address (lo)
+		sta con_loc
+		lda line_to_base+1,Y; get the base address (hi)
+		sta con_loc+1
+		pla					; get the column back
+		clc					; add the column to the base
+		adc con_loc
+		sta	con_loc			; store back to the base address
+		rts					; we don't need to carry, as no valid line crosses a page
+.endproc
+
+line_to_base: .word $400,$480,$500,$580,$600,$680,$700,$780
+			  .word $428,$4A8,$528,$5A8,$628,$6A8,$728,$7A8
+			  .word $450,$4D0,$550,$5D0,$650,$6D0,$750,$7D0
+line_to_base_end = *

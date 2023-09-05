@@ -9,6 +9,10 @@
 		mu_page_start:	.res 1
 		mu_test_idx:	.res 1
 		scratch:		.res 2
+		; results:		.res 48*4
+		results:		.res $10
+		zpe = *
+.out .sprintf("    results = $%04x, zpe = $%04x ",results,zpe)
 .code
 
 FIRST_PAGE = $02
@@ -26,8 +30,11 @@ FIRST_PAGE = $02
 		STA mu_page_end		; use it as the page number in the scratch pointer
 		LDA #0
 		STA (count_ptr),Y	; store 0 at the start of the page
-		CMP (count_ptr),Y	; see if it stuck.  If no RAM there, will return $FF
-		BNE found			; XXX (should we check only for $FF) if no match, we found the end of RAM
+		; CMP (count_ptr),Y	; see if it stuck.  If no RAM there, will return $FF
+		; BNE found			; XXX (should we check only for $FF) if no match, we found the end of RAM
+		LDA (count_ptr),Y
+		CMP #$FF
+		BEQ found
 		DEX
 		BPL lp
 		LDA #$C0				; if not yet found, it's 48K
@@ -42,8 +49,6 @@ FIRST_PAGE = $02
 ; marchU
 ; returns bitmask of bad bits in A
 .proc 	marchU
-		LDA #0				; low bits 0 so we test a hardware page at a time
-		STA mu_ptr_lo
 		LDA #FIRST_PAGE		; set starting address (maybe change later to a parameter?)
 		STA mu_page_start
 
@@ -51,6 +56,8 @@ FIRST_PAGE = $02
 		STA mu_test_idx
 
 	init:	
+		LDA #0				; low bits 0 so we test a hardware page at a time
+		STA mu_ptr_lo
 		LDY #$00			; Y will be the pointer into the page
 		LDX mu_test_idx		; get the index to the test value pages
 		LDA tst_tbl,X		; get the test value into A
@@ -127,8 +134,11 @@ FIRST_PAGE = $02
 		DEC mu_ptr_hi	; start at the end page minus one
 		JMP continue3
 
-	bad:STY mu_ptr_lo
-		JMP report_bad
+	bad: JMP report_bad
+		; STY mu_ptr_lo	; save the offset with the bad location
+		; LDY mu_ptr_hi	; get the page number as index into results array
+		; ORA results,Y	; collect any bad bits
+		; JMP next
 
 	continue3:
 		LDY #$FF		; start at FF and count down
@@ -174,14 +184,21 @@ FIRST_PAGE = $02
 		BCS step4		; if not there yet (mu_ptr_hi>=mu_page_start so carry set), loop again
 
 ; now, determine whether to repeat with a new test value
+	next:
 		LDX mu_test_idx
 		DEX
 		STX mu_test_idx
+
+		; BMI show_report	; we're with all values, so show results
 		BMI report_good		; out of test values, declare it good
+
 		JMP init		; else go to next test value
 	; good:
 	; 	JMP report_good
 	; 	RTS
+.endproc
+
+.proc	show_report
 .endproc
 
 .proc	report_bad
@@ -230,7 +247,7 @@ FIRST_PAGE = $02
 		ldx #$00		; cycles
 		lda #$20		; period
 		jsr beep
-		lda #2
+		lda #10
 		jsr display_delay
 		RTS
 .endproc
