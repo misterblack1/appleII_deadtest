@@ -1,15 +1,13 @@
 # Apple II Dead Test RAM Diagnostic ROM
-Recently while fixing an Apple II+ clone, I was annoyed there seemed to be no diagnostic ROMs available for the Apple II that could test the RAM without using RAM. 
 
-This ROM is a result of that frustration.
+## Background
+Recently while fixing an Apple II+ clone, I was annoyed there seemed to be no diagnostic ROMs available for the Apple II that could test the RAM without using RAM. This ROM is a result of that frustration. 
 
-This all began as a quick test ROM whipped up by Frank (IZ8DWF) that simply displayed full screens of characters in text mode, all without using zero page. 
+The ROM you have here began as a quick test ROM whipped up by Frank (IZ8DWF) that simply displayed full screens of characters in text mode, all without using zero page. This was seen in my Apple II+ Clone repair series.
 
 I then wanted to do more, so I found disassembled code for the C64 "Dead Test" ROM on World Of Janni, and ported that to the Apple II. I had to adjusted the functionality of the initial phase of that ROM to work with the Apple II, but it actually worked even with my very limited assembly skills. The main thing that makes this test great is it does NOT rely on DRAM at all. It runs entirely inside the ROM and does not use the ZERO PAGE ($00-$FF) or the stack ($100-$1FF.) All the other tests I found for the Apple II use Zero Page and stack, which is useless if you have DRAM problems in the first bank of memory. 
 
-The biggest problem with the C64 dead test is the diagnostic is a very simply RAM test that simply filled up the first several pages of RAM with simple patters. It will mis a lot of problems and also can be fooled by many issues.
-
-So that's where David took over the work -- and at this point, very little of the original code from Frank or the C64 Dead test code exists. 
+The biggest problem with the C64 dead test is the diagnostic is a very simply RAM test that simply filled up the first several pages of RAM with simple patters. It will mis a lot of problems and also can be fooled by many issues. So that's where David took over the work -- and at this point, very little of the original code from Frank or the C64 Dead test code exists. 
 
 ## Scope
 This test was designed and tested on the Apple II and Apple II+. (Clones of the Apple II+ should be supported.) 
@@ -84,6 +82,8 @@ For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (Ther
 ## To assemble the ROM
 * apt-get install cc65 make
 * Then download the zip from the repo and run "make"
+
+a2vmemnoram.asm and a2vmemnoram.bin is Frank IZ8DWF's original test ROM, as shown in my Apple II Clone repair
 
 ## Thanks
 * World of Jani for sharing disassembled C64 dead test code.
