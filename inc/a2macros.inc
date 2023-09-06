@@ -116,8 +116,10 @@ end:	.byte 0
 .endmacro
 
 .macro m_con_goto line, col
+		; .local loc
+		; loc = .ident(.concat("TXTLINE",.string(line))) + col
 		lda #<(line+col)
 		sta con_loc
-		lda #>line
+		lda #>(line+col)
 		sta con_loc+1
 .endmacro

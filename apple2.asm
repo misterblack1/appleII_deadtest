@@ -56,6 +56,7 @@ romstart:
 
 		jsr show_banner
 		puts_centered_at TXTLINE24, "ZERO/STACK PAGES OK"
+		jsr show_charset
 
 		ldx #$40		; cycles
 		lda #$80		; period
@@ -64,13 +65,42 @@ romstart:
 		lda #$40		; period
 		jsr beep
 
-		LDA #4
+		LDA #8
 		JSR delay_seconds
 
 		jsr init_results
 test_ram:
 		JSR marchU		; run the test on RAM and report
 		JMP test_ram
+
+
+.define charset_line_size 32
+.macro	m_show_charset_lines
+.repeat 256/charset_line_size, line
+	m_con_goto .ident(.concat("TXTLINE",.string(line+5))),(40-charset_line_size)/2-charset_line_size*line
+	jsr show_charset_line
+.endrepeat
+.endmacro
+
+.proc	show_charset
+		puts_centered_at TXTLINE1, "CHARACTER SET"
+		ldy #0
+		m_show_charset_lines
+		rts
+.endproc
+
+; on entry:
+; Y = first character segment to display
+; con_loc = where to print, minus Y
+.proc	show_charset_line
+		ldx #charset_line_size
+	:	tya				; get the character to print
+		sta (con_loc),Y	; write it to the screen
+		iny
+		dex
+		bne :-
+		rts
+.endproc
 
 .proc	show_banner
 		jsr con_cls
