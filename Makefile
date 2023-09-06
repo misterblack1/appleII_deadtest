@@ -7,17 +7,15 @@ OUTPUT = apple2.bin
 
 ASSEMBLE_xa = xa -C -M -o
 ASSEMBLE_sa = cl65 -t apple2 -C a2_f8rom.cfg -I ./inc -l $(@:%.bin=%.lst) -Ln $(@:%.bin=%.sym)
-
 ASSEMBLE = $(ASSEMBLE_sa)
 
 RAMSIZE = 16K
 
 CHECKSUM = sha1sum --tag
 
-# all: $(OUTPUT)
-all: apple2.bin
+all: apple2.bin a2vmemnoram.bin
 
-%.bin: %.asm Makefile
+%.bin: %.asm Makefile a2_f8rom.cfg
 	$(ASSEMBLE) -o $@ $<
 	-@$(CHECKSUM) $@
 
