@@ -29,8 +29,6 @@ romstart:
 
 		inline_beep_xy $20, $C0
 		inline_cls
-		; inline_print banner_msg, TXTLINE20+((40-(banner_end-banner_msg-1))/2)
-
 
 		; do the zero page test, including its own error reporting
 .include "inc/marchu_zpsp.asm"
@@ -54,8 +52,7 @@ romstart:
 
 		jsr init_results
 test_ram:
-		JSR marchU		; run the test on RAM
-		; JSR report_ram	; report the results
+		JSR marchU		; run the test on RAM and report
 		JMP test_ram
 
 .proc	show_banner
@@ -95,27 +92,16 @@ tst_tbl_end = *
 
 hex_tbl:.apple2sz "0123456789ABCDEF"
 
-zp_msg:
-		.apple2sz "TEST ZERO PAGE"
+zp_msg: .apple2sz "TEST ZERO PAGE"
 zp_end = *
-; pt_msg:
-; 		.apple2sz "TEST PAGE ERRORS"
-; pt_end:
-pe_msg:
-		.apple2sz "PAGE ERRORS FOUND"
+pe_msg: .apple2sz "PAGE ERRORS FOUND"
 pe_end:
-; re_msg: .apple2sz "RAM ERROR: XX AT XXXX"
-; re_end:
 
 
-; next_msg:
-; 		.asciiz "ZERO/STACK PAGES OK - RUNNING RAM TEST"
-; next_end = *
 ;-----------------------------------------------------------------------------
 ; end of the code	
 	endofrom = *
 .out .sprintf("    size of code: %d bytes",endofrom-romstart)
-
 	.res ($FFFA-endofrom), $FF ; fills the unused space with $FF 
 
 ; vectors

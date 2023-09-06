@@ -4,7 +4,6 @@
 
 start:	
 		LDX #(tst_tbl_end-tst_tbl-1)	; initialize the pointer to the table of values
-		; LDX #$10			; start testing with value 0
 
 ; step 0; up - w0 - write the test value
 marchU:	
@@ -24,7 +23,7 @@ marchU0:
 		INY				; count up
 		BNE marchU0		; repeat until Y overflows back to zero
 
-		; STY $00			; intentionally create an error for testing
+		; STY $00			; simulate an error for testing
 ; step 1; up - r0,w1,r1,w0
 ; A contains test value
 marchU1:EOR $00,Y		; r0 - read and compare with test value (by XOR'ing with accumulator)
@@ -65,7 +64,6 @@ marchU2:TXA				; recover test value
 		EOR #$FF		; invert
 		STA $00,Y		; w1 - write the inverted test value
 		STA $0100,Y		; w1s - also stack page
-		; EOR #$FF		; invert
 		INY				; count up
 		BNE marchU2		; repeat until Y overflows back to zero
 
@@ -164,8 +162,6 @@ marchup:
 	; find the bit to beep out
 		tsx				; get the bad bit mask back into A
 		txa
-		; cmp #$FF		; if it's FF, it's a motherboard error
-		; beq mb_err
 		LDX #1			; count up
 	chkbit:	
 		LSR				; move lowest bit into carry
@@ -175,18 +171,12 @@ marchup:
 		bne chkbit	; test next bit
 	wha:JMP wha			; only get here if there was no bad bit
 
-	; mb_err:
-	; 	ldx #$FF		; note this special case
-
 	start_beeping:
 ; now X contains the index of the bit, starting at 1
 		txs				; save the bit index of the top set bit into SP
 	beeploop:
 		lda #1
 	type_beep:					; beep an annoying chirp to indicate page err
-		; ldy #0
-		; ldx #20
-		; inline_delay_xy
 		inline_beep_xy $FF, $FF
 		sec
 		sbc #1
@@ -194,8 +184,6 @@ marchup:
 	
 		tsx					; fetch the bit number
 		txa
-	; 	cmp #$FF
-	; 	beq beeploop		; continuous beeping for MB error
 	bit_beep:
 		LDX #$7F			; pause with low res on
         LDY #$00
@@ -349,7 +337,6 @@ zp_good:
 		JMP beeploop
 
 bad_page_msg:.apple2sz "PAGE ERR"
-	; bad_page_msg_len = * - bad_page_msg
 .endproc
 
 page_ok:

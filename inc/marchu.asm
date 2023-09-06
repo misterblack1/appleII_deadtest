@@ -152,8 +152,6 @@ FIRST_PAGE = $02
 		JMP continue3
 
 	bad: 
-		; JMP report_bad
-		; STY mu_ptr_lo	; XXX (needed?) save the offset with the bad location
 		LDY mu_ptr_hi	; get the page number as index into results array
 		ORA results,Y	; collect any bad bits
 		STA results,Y	; store the accumulated errors back to the results array
@@ -211,20 +209,13 @@ FIRST_PAGE = $02
 		STX mu_test_idx
 
 		BMI show_report	; we're done with all values, so show results
-		; BMI report_good		; out of test values, declare it good
 
 		JMP init		; else go to next test value
-	; good:
-	; 	JMP report_good
-	; 	RTS
 .endproc
 
 .proc	show_report
 		sta TXTSET 		; turn on text
 		jsr show_banner
-
-		; puts_centered_at TXTLINE1, "RESULTS"
-		; puts_at TXTLINE1+5, "BANK 0 ---- BANK 1 ---- BANK 2 ---- "
 		puts_at TXTLINE1, "GITHUB.COM/MISTERBLACK1/APPLEII_DEADTEST"
 		puts_at TXTLINE3, "PAGE"
 
@@ -298,10 +289,10 @@ FIRST_PAGE = $02
 
 		lda all_errs
 		beq good
-		jsr report_bad
+		jsr beep_bad
 		jmp done
 	good:
-		jsr report_good
+		jsr beep_good
 
 	done:
 		LDA #10
@@ -312,22 +303,7 @@ FIRST_PAGE = $02
 .endproc
 
 
-.proc	report_bad
-		; pha
-		; jsr show_banner
-		; puts_centered_at TXTLINE24, "RAM ERROR: $XX AT $XXXX"
-
-		; m_con_goto TXTLINE24,20
-		; pla
-		; jsr con_put_hex
-
-		; m_con_goto TXTLINE24,27
-		; lda mu_ptr_hi
-		; jsr con_put_hex
-		; m_con_goto TXTLINE24,29
-		; lda mu_ptr_lo
-		; jsr con_put_hex
-
+.proc	beep_bad
 		ldx #$20		; cycles
 		lda #$80		; period
 		jsr beep
@@ -337,15 +313,10 @@ FIRST_PAGE = $02
 		ldx #$FF		; cycles
 		lda #$FF		; period
 		jsr beep
-
-		; LDA #15
-		; jsr delay_seconds
 		rts
 .endproc
 
-.proc	report_good
-		; jsr show_banner
-		; puts_centered_at TXTLINE24, "RAM TEST OK"
+.proc	beep_good
 		ldx #$20		; cycles
 		lda #$80		; period
 		jsr beep
@@ -355,8 +326,6 @@ FIRST_PAGE = $02
 		ldx #$00		; cycles
 		lda #$20		; period
 		jsr beep
-		; lda #10
-		; jsr delay_seconds
 		RTS
 .endproc
 
