@@ -21,18 +21,20 @@ The test should work fine on the Apple IIe and IIc as well, but please keep in m
 * Next the ROM will do a quick test for page errors inside the RAM. This is a subtle issue that can fool many RAM tests. For the main RAM tests to run, we need fully functional Zero page and stack, and if these will get corrupted by a page error causing the ROM to crash.  This page error test tries to prevent that from happening.
 * The page error test work by by writing `$00` to address `$0000` (inside zerp page) and then writing `$FF` to `$0100`, `$0200`, `$0400`, `$0800`, `$1000`, `$2000`, `$4000`, and `$8000`. If when writing `$FF` to those locations the `$00` at location `$0000` is disturbed, then we have a page error and must halt. (There is a bit more going on, but it's not relevant).
 * If the page error test fails, the ROM will beep out which RAM bit is bad (helping indicate which chip has a page fault).  In the event location `$00` is corrupted with the value `$FF`, this indicates a logic problem on the motherboard.
-* The next phase is to detect how much RAM is installed in the Apple II. Valid configurations of the original Apple II are 4k, 8k, 12k, 16k, 20k, 24k, 32k, 36k, and 48k. Currently this test does NOT test above 48k, because using/testing that RAM requires banking out the ROM.
+* The next phase is to detect how much RAM is installed in the Apple II. Valid configurations of the original Apple II are 4K, 8K, 12K, 16K, 20K, 24K, 32K, 36K, and 48K. Currently this test does NOT test above 48k, because using/testing that RAM requires banking out the ROM.
 * The ROM will print a banner showing how much RAM is detected and that the zero page and stack page are good.
-* It will then procede to do March-U RAM test on all of the RAM (minus the zero Page and stack, which are used to run the diagnostic ROM.)
+* It will then procede to do March-U RAM test on all of the RAM (minus the zero page and stack, which are used to run the diagnostic ROM.)
 * A full test of 48k takes about 1 minute 30 seconds.
 * When the March-U RAM test finishes, you will get a page displaying the test results for all of the RAM detected in the machine.
 
 ### If an error is detected in the zero page, stack, or you have a page error, it will beep out the bit that is bad
 
 * One long low beep followed by a number of medium beeps:
-  * This is a zero page or stack page error.
-* A trill of high beeps, followed by a number of medium beeps:
-  * This is a page error.
+  * This is a zero page or stack page error.  
+  * The count of medium beeps tells you which bit, and thus which chip (see below).
+* A brief trill of high beeps, followed by a number of medium beeps:
+  * This is a page error.  Address lines inside a chip are being crossed, so writes to one location corrupt bits in another location.
+  * Again, the count of medium beeps tells you which bit and chip (see below).
 * A constant trill of high beeps:
   * This is a problem with the address decoding logic on the motherboard.  This will only happen during the page error test.
 
@@ -96,17 +98,17 @@ For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (Ther
 * Since Apple uses 2316 (2K) mask ROMs on their motherboard and on the Apple ROM card, you will need an adapter to use an EPROM in any of these sockets. (Make one or use a PCB).
 * Some languge cards can use 2716 EPROMs in the ROM socket, that may be helpful.
 * The Apple //e can use a 2764 (8K) that holds EF ROMs, so you can load this F8 ROM into the top of the chip. (Load into address `$1800` in the EPROM to map into `$F800`)
-* Platinum //e has `CF` ROM which is a 27128 (16K) so you would load this `F8` ROM into the top of the chip (`$3800` to map into `$F800`)
-* //c ROM is 27256 (32k) and we have not tested this on the //c, but you would need to find the right location to load this ROM into the EPROM so it would start at `$F800` in the 6502 memory map.
+* The Platinum //e has `CF` ROM which is a 27128 (16K) so you would load this `F8` ROM into the top of the chip (`$3800` to map into `$F800`)
+* The Apple //c ROM is 27256 (32k) and we have not tested this on the //c, but you would need to find the right location to load this ROM into the EPROM so it would start at `$F800` in the 6502 memory map.
 
-There is also a 170K DOS 3.3 disk image `DEADTEST-DISK.DSK` in the repo, you can try that out if your system is working well enough to boot into DOS _AND_ you have a working language card installed in your system. It will auto start once the disks boots up. (Remember this will only test the 48K in your system)
+There is also a 170K DOS 3.3 disk image `DEADTEST-DISK.DSK` in the repo, you can try that out if your system is working well enough to boot into DOS *AND* you have a working language card installed in your system. It will auto start once the disks boots up. (Remember this will only test the first 48K in your system even if you have more.)
 
 ![ROM adapter in card](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/Screen%20Shot%202023-08-27%20at%207.45.43%20PM.png?raw=true)
 
 ## To assemble the ROM (Linux or WSL on Windows)
 
 * `apt-get install cc65 make`
-* Then download the zip from the repo and run "make"
+* Then download the zip from the repo and run `make`
 
 `a2vmemnoram.asm` and `a2vmemnoram.bin` are Frank IZ8DWF's original test ROM, as shown in my Apple II Clone repair video.
 
