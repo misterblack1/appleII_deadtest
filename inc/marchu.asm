@@ -22,6 +22,7 @@
 		mu_page_end:	.res 1
 		mu_page_start:	.res 1
 		mu_test_idx:	.res 1
+		mu_ysave:		.res 1
 		all_errs:		.res 1
 		scratch:		.res 2
 		results:		.res 48*4
@@ -65,6 +66,18 @@ FIRST_PAGE = $02
 		bne lp
 		rts
 .endproc
+
+.macro checkbad
+		beq :+
+		STY mu_ysave
+		LDY mu_ptr_hi	; get the page number as index into results array
+		ORA results,Y	; collect any bad bits
+		STA results,Y	; store the accumulated errors back to the results array
+		ORA all_errs	; also store one value that collects all of the bad bits found
+		STA all_errs
+		LDY mu_ysave
+	:
+.endmac
 
 ; marchU
 ; returns bitmask of bad bits in A
@@ -125,12 +138,14 @@ FIRST_PAGE = $02
 	step1:	
 		TXA				; get the test value
 		EOR (mu_ptr_lo),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
-		BNE bad			; if bits differ, location is bad
+		; BNE bad			; if bits differ, location is bad
+		checkbad
 		TXA				; get the test value
 		EOR #$FF		; invert
 		STA (mu_ptr_lo),Y	; w1 - write the inverted test value
 		EOR (mu_ptr_lo),Y	; r1 - read the same value back and compare using XOR
-		BNE bad			; if bits differ, location is bad
+		; BNE bad			; if bits differ, location is bad
+		checkbad
 		TXA				; get the test value
 		STA (mu_ptr_lo),Y	; w0 - write the test value to the memory location
 		INY				; count up
@@ -147,7 +162,8 @@ FIRST_PAGE = $02
 	step2:	
 		TXA				; get the test value
 		EOR (mu_ptr_lo),Y	; r0 - read and compare with test value (by XOR'ing with accumulator)
-		BNE bad			; if bits differ, location is bad
+		; BNE bad			; if bits differ, location is bad
+		checkbad
 		TXA				; get the test value
 		EOR #$FF		; invert
 		STA (mu_ptr_lo),Y	; w1 - write the inverted test value
@@ -165,13 +181,13 @@ FIRST_PAGE = $02
 		DEC mu_ptr_hi	; start at the end page minus one
 		JMP continue3
 
-	bad: 
-		LDY mu_ptr_hi	; get the page number as index into results array
-		ORA results,Y	; collect any bad bits
-		STA results,Y	; store the accumulated errors back to the results array
-		ORA all_errs	; also store one value that collects all of the bad bits found
-		STA all_errs
-		JMP next
+	; bad: 
+	; 	LDY mu_ptr_hi	; get the page number as index into results array
+	; 	ORA results,Y	; collect any bad bits
+	; 	STA results,Y	; store the accumulated errors back to the results array
+	; 	ORA all_errs	; also store one value that collects all of the bad bits found
+	; 	STA all_errs
+	; 	JMP next
 
 	continue3:
 		LDY #$FF		; start at FF and count down
@@ -179,11 +195,13 @@ FIRST_PAGE = $02
 		TXA				; get the test value
 		EOR #$FF		; invert
 		EOR (mu_ptr_lo),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
-		BNE bad			; if bits differ, location is bad
+		; BNE bad			; if bits differ, location is bad
+		checkbad
 		TXA				; get the test value
 		STA (mu_ptr_lo),Y	; w0 - write the test value
 		EOR (mu_ptr_lo),Y	; r0 - read the same value back and compare using XOR
-		BNE bad			; if bits differ, location is bad
+		; BNE bad			; if bits differ, location is bad
+		checkbad
 		TXA				; get the test value
 		EOR #$FF		; invert
 		STA (mu_ptr_lo),Y	; w1 - write the inverted test value
@@ -204,20 +222,21 @@ FIRST_PAGE = $02
 		TXA				; get the test value
 		EOR #$FF		; invert
 		EOR (mu_ptr_lo),Y	; r1 - read and compare with inverted test value (by XOR'ing with accumulator)
-		BNE bad			; if bits differ, location is bad
+		; BNE bad			; if bits differ, location is bad
+		checkbad
 		TXA				; get the test value
 		STA (mu_ptr_lo),Y	; w0 - write the test value
 		DEY				; determine if we are at offset zero
 		CPY #$FF			; did we wrap around?
 		BNE step4		; repeat until Y overflows back to FF
 
+	next:
 		DEC mu_ptr_hi	; decrement the page
 		LDA mu_ptr_hi
 		CMP mu_page_start	; compare with the first page, which can't be zero
 		BCS step4		; if not there yet (mu_ptr_hi>=mu_page_start so carry set), loop again
 
 ; now, determine whether to repeat with a new test value
-	next:
 		LDX mu_test_idx
 		DEX
 		STX mu_test_idx
