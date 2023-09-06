@@ -41,14 +41,28 @@ inner:	DEY
 	.else
 		.repeat count
 	.endif
-:		DEY 
-        BNE :-
-        DEX 
-        BNE :-
+:		DEY 			; 512X cycles
+        BNE :-			; 513X cycles
+        DEX 			; 2X cycles
+        BNE :-			; 2X+1 cycles - total = 1029X + 1 cycles (when Y = $FF)
 	.if .blank(count)
 	.else
 		.endrepeat
 	.endif
+.endmacro
+
+
+; this macro can delay for an approximate specified number of clock cycles up to 589815
+; downside is it destroys A and X
+.macro inline_delay_cycles_ax cycles
+		.local n
+		n = cycles/9
+		lda #>n			; 2 cycles (outside loop)
+		ldx #<n			; 2 cycles (outside loop)
+	:	cpx #1			; 2 cycles
+		dex				; 2 cycles
+		sbc #0			; 2 cycles
+		bcs :-			; 3 cycles (+1 outside loop at end)
 .endmacro
 
 ; this macro can delay for an approximate specified number of clock cycles up to 589815
@@ -56,29 +70,40 @@ inner:	DEY
 .macro inline_delay_cycles_ay cycles
 		.local n
 		n = cycles/9
-		lda #>n
-		ldy #<n
+		lda #>n			; 2 cycles (outside loop)
+		ldy #<n			; 2 cycles (outside loop)
 	:	cpy #1			; 2 cycles
 		dey				; 2 cycles
 		sbc #0			; 2 cycles
-		bcs :-			; 3 cycles
+		bcs :-			; 3 cycles (+1 outside loop at end)
 .endmacro
 
 ; this macro can delay for an approximate specified number of clock cycles up to 983,040
 ; downside is it destroys A and Y
-.macro inline_delay_with_cancel cycles
+.macro inline_delay_with_pause cycles, onkey
 		.local n, done
 		n = cycles/15
 		lda #>n
 		ldy #<n
 	:	bit KBD			; 4 cycles
-		bmi done		; 2 cycles
+		.if .not .blank({onkey})
+		bmi onkey		; 2 cycles
+		.else
+		bmi done
+		.endif
 		cpy #1			; 2 cycles
 		dey				; 2 cycles
 		sbc #0			; 2 cycles
 		bcs :-			; 3 cycles
+		; jmp done
+	; kbhit:
+	; :	lda KBD			; wait until key has been let up
+	; 	and #$7F  
+	; 	bne :-
+	; 	.if .not .blank({onkey})
+	; 	jmp onkey
+	; 	.endif
 	done:
-		; bit KBDSTRB
 .endmacro
 
 .macro	inline_cls
@@ -148,4 +173,13 @@ pexit:
 		; sta con_loc
 		; lda #>(line+col)
 		; sta con_loc+1
+.endmacro
+
+.macro m_erase_line line
+		m_con_goto line, 0
+		lda #' '|$80
+		ldy #39
+	:	sta (con_loc),Y
+		dey
+		bpl :-
 .endmacro

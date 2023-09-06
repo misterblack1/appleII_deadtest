@@ -328,7 +328,7 @@ FIRST_PAGE = $02
 		jsr beep_good
 
 	done:
-		LDA #10
+		LDA #8
 		jsr delay_seconds
 		jmp marchU
 

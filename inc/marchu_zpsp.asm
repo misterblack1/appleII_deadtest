@@ -188,8 +188,8 @@ marchup:
 		bne chkbit	; test next bit
 	wha:JMP wha			; only get here if there was no bad bit
 
+	; now X contains the index of the bit, starting at 1
 	start_beeping:
-; now X contains the index of the bit, starting at 1
 		txs				; save the bit index of the top set bit into SP
 	beeploop:
 		lda #1
@@ -198,23 +198,26 @@ marchup:
 		sec
 		sbc #1
 		bpl type_beep
-	
+
 		tsx					; fetch the bit number
 		txa
 	bit_beep:
-		LDX #$7F			; pause with low res on
-        LDY #$00
-		inline_delay_xy 2
-		STA TXTCLR 			; turn on graphics
+		tax
+		inline_delay_cycles_ay 400000
+		txa
+		sta TXTCLR 			; turn on graphics
 		inline_beep_xy $FF, $80
-		STA TXTSET			; text mode
+		sta TXTSET			; text mode
 		sec
 		sbc #1
 		bne bit_beep
 
-		LDX #$FF			; pause betwen beeping
-		LDY #$FF
-		inline_delay_xy 4
+		; pause betwen beeping ~1.5 sec
+		ldx #3
+	dl:	inline_delay_cycles_ay 500000
+		dex
+		bne dl
+
 
 		JMP beeploop
 .endproc
@@ -223,12 +226,15 @@ bad_msg:.apple2sz "ZP/SP ERR"
 	bad_msg_len = * - bad_msg
 
 zp_good:
-		; lda #$A5
+		; lda #$18
 		; jmp zp_error		; simulate error
 
 		; inline_print pt_msg, TXTLINE21+((40-(pt_end-pt_msg-1))/2)
 
 .proc page_test
+		; lda #$FF				; simulate error
+		; jmp page_error
+
 		LDA #0		; write zero to zp location 0
 		TAY
 	wz:	STA $00,Y
@@ -271,9 +277,6 @@ zp_good:
 		INY
 		BNE wr
 
-		; lda #$FF				; simulate error
-		; jmp page_error
-
 		JMP page_ok
 .endproc
 
@@ -305,7 +308,7 @@ zp_good:
 		tsx				; get the bad bit mask back into A
 		txa
 		cmp #$FF		; if it's FF, it's a motherboard error
-		beq mb_err
+		beq start_beeping
 		LDX #1			; count up
 	page_chkbit:	
 		LSR				; move lowest bit into carry
@@ -315,41 +318,39 @@ zp_good:
 		bne page_chkbit	; test next bit
 	wha:JMP wha			; only get here if there was no bad bit
 
-	mb_err:
-		ldx #$FF		; note this special case
-
+	; now X contains the index of the bit, starting at 1
 	start_beeping:
-; now X contains the index of the bit, starting at 1
-		txs				; save the bit index of the top set bit into SP
+		txs					; save the bit index of the top set bit into SP
 	beeploop:
-		lda #5
-	type_beep:					; beep an annoying chirp to indicate page err
-		ldy #0
-		ldx #20
-		inline_delay_xy
+		ldx #5
+	type_beep:				; beep an annoying chirp to indicate page err
+		inline_delay_cycles_ay 30000
+		txa
 		inline_beep_xy $40, $40
-		sec
-		sbc #1
-		bpl type_beep
-	
+		tax
+		dex
+		bne type_beep
+
 		tsx					; fetch the bit number
 		txa
 		cmp #$FF
 		beq beeploop		; continuous beeping for MB error
 	bit_beep:
-		LDX #$7F			; pause with low res on
-        LDY #$00
-		inline_delay_xy 2
-		STA TXTCLR 			; turn on graphics
+		tax
+		inline_delay_cycles_ay 400000
+		txa
+		sta TXTCLR 			; turn on graphics
 		inline_beep_xy $FF, $80
-		STA TXTSET			; text mode
+		sta TXTSET			; text mode
 		sec
 		sbc #1
 		bne bit_beep
 
-		LDX #$FF			; pause betwen beeping
-		LDY #$FF
-		inline_delay_xy 4
+		; pause betwen beeping ~1.5 sec
+		ldx #3
+	dl:	inline_delay_cycles_ay 500000
+		dex
+		bne dl
 
 		JMP beeploop
 
