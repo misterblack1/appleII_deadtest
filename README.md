@@ -103,7 +103,7 @@ For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (Ther
 
 ## To assemble the ROM (Linux or WSL on Windows)
 
-* apt-get install cc65 make
+* `apt-get install cc65 make`
 * Then download the zip from the repo and run "make"
 
 `a2vmemnoram.asm` and `a2vmemnoram.bin` are Frank IZ8DWF's original test ROM, as shown in my Apple II Clone repair video.
