@@ -60,7 +60,7 @@ FIRST_PAGE = $02
 .proc	init_results
 		lda #0
 		sta all_errs
-		tya
+		tay
 	lp: sta results,Y
 		iny
 		bne lp
@@ -249,8 +249,8 @@ FIRST_PAGE = $02
 .proc	show_report
 		sta TXTSET 		; turn on text
 		jsr show_banner
-		puts_at TXTLINE1, "GITHUB.COM/MISTERBLACK1/APPLEII_DEADTEST"
-		puts_at TXTLINE3, "PAGE"
+		puts_at 1,0, "GITHUB.COM/MISTERBLACK1/APPLEII_DEADTEST"
+		puts_at 3,0, "PAGE"
 
 		ldx #15
 	next_head_line:

@@ -64,6 +64,23 @@ inner:	DEY
 		bcs :-			; 3 cycles
 .endmacro
 
+; this macro can delay for an approximate specified number of clock cycles up to 983,040
+; downside is it destroys A and Y
+.macro inline_delay_with_cancel cycles
+		.local n, done
+		n = cycles/15
+		lda #>n
+		ldy #<n
+	:	bit KBD			; 4 cycles
+		bmi done		; 2 cycles
+		cpy #1			; 2 cycles
+		dey				; 2 cycles
+		sbc #0			; 2 cycles
+		bcs :-			; 3 cycles
+	done:
+		; bit KBDSTRB
+.endmacro
+
 .macro	inline_cls
 		LDA #$A0	 	; A0 is the black character on the Apple II and II plus
 		LDY #$00			; clear the screen
@@ -100,26 +117,35 @@ pexit:
 	.popseg
 .endmacro
 
-.macro puts_at loc, message
+; line is one-based, col is zero-based... sorry
+.macro puts_at line, col, message
+		.local loc
+		loc = .ident(.concat("TXTLINE",.string(line)))+col
 		jsr con_puts_embedded
 		.word loc
 		scrcode message
 		.byte 0
 .endmacro
 
-.macro puts_centered_at lineloc, message
-		.local msg, loc, end
-		jsr con_puts_embedded
-		.word lineloc+((40-(end-msg))/2)
-msg:	scrcode message
-end:	.byte 0
+.macro puts_centered_at line, message
+		puts_at line, (40-.strlen(message))/2, message
+
+; 		.local msg, loc, end
+; 		jsr con_puts_embedded
+; 		.word lineloc+((40-(end-msg))/2)
+; msg:	scrcode message
+; end:	.byte 0
 .endmacro
 
 .macro m_con_goto line, col
-		; .local loc
-		; loc = .ident(.concat("TXTLINE",.string(line))) + col
-		lda #<(line+col)
+		.local loc
+		loc = .ident(.concat("TXTLINE",.string(line))) + col
+		lda #<(loc)
 		sta con_loc
-		lda #>(line+col)
+		lda #>(loc)
 		sta con_loc+1
+		; lda #<(line+col)
+		; sta con_loc
+		; lda #>(line+col)
+		; sta con_loc+1
 .endmacro

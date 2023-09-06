@@ -55,7 +55,7 @@ romstart:
 		JSR count_ram	; count how much RAM is installed
 
 		jsr show_banner
-		puts_centered_at TXTLINE24, "ZERO/STACK PAGES OK"
+		puts_centered_at 24, "ZERO/STACK PAGES OK"
 		jsr show_charset
 
 		ldx #$40		; cycles
@@ -77,13 +77,13 @@ test_ram:
 .define charset_line_size 32
 .macro	m_show_charset_lines
 .repeat 256/charset_line_size, line
-	m_con_goto .ident(.concat("TXTLINE",.string(line+5))),(40-charset_line_size)/2-charset_line_size*line
+	m_con_goto line+5,(40-charset_line_size)/2-charset_line_size*line
 	jsr show_charset_line
 .endrepeat
 .endmacro
 
 .proc	show_charset
-		puts_centered_at TXTLINE1, "CHARACTER SET"
+		puts_centered_at 1, "CHARACTER SET"
 		ldy #0
 		m_show_charset_lines
 		rts
@@ -104,9 +104,9 @@ test_ram:
 
 .proc	show_banner
 		jsr con_cls
-		puts_centered_at TXTLINE22, "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
-		puts_centered_at TXTLINE23, "TESTING RAM FROM $0200 TO $XXFF"
-		m_con_goto TXTLINE23, 31
+		puts_centered_at 22, "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
+		puts_centered_at 23, "TESTING RAM FROM $0200 TO $XXFF"
+		m_con_goto 23, 31
 		LDA mu_page_end
 		SEC
 		SBC #1
@@ -115,9 +115,11 @@ test_ram:
 .endproc
 
 .proc	delay_seconds
+		sta KBDSTRB
 		asl				; double the number, since we actually count in half-seconds
 loop:	PHA
-		inline_delay_cycles_ay 500000
+		; inline_delay_cycles_ay 500000
+		inline_delay_with_cancel 500000
 		PLA
 		SEC
 		SBC #1
@@ -129,8 +131,8 @@ loop:	PHA
 .include "inc/marchu.asm"
 .include "inc/a2console.asm"
 
-tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
-; tst_tbl:.BYTE $80 ; while debugging, shorten the test value list
+; tst_tbl:.BYTE $80,$40,$20,$10, $08,$04,$02,$01, $00,$FF,$A5,$5A 
+tst_tbl:.BYTE $80 ; while debugging, shorten the test value list
 tst_tbl_end = *
 
 ; banner_msg: 

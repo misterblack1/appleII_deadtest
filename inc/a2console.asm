@@ -132,7 +132,7 @@
 ; Y = row
 ; doesn't touch X
 .proc con_goto
-		pha					; save A
+		pha					; save A (column) on stack
 		tya
 		asl					; multiply Y by 2
 		tay
