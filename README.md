@@ -99,7 +99,7 @@ For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (Ther
 * Platinum //e has `CF` ROM which is a 27128 (16K) so you would load this `F8` ROM into the top of the chip (`$3800` to map into `$F800`)
 * //c ROM is 27256 (32k) and we have not tested this on the //c, but you would need to find the right location to load this ROM into the EPROM so it would start at `$F800` in the 6502 memory map.
 
-There is also a 170K DOS 3.3 disk image in the repo, you can try that out if your system is working well enough to boot into DOS _AND_ you have a working language card installed in your system. It will auto start once the disks boots up. (Note: It seems to not reliably start on the IIe and IIc, not sure why. If you get a crash, try typing 300G and it may start.)
+There is also a 170K DOS 3.3 disk image `DEADTEST-DISK.DSK` in the repo, you can try that out if your system is working well enough to boot into DOS _AND_ you have a working language card installed in your system. It will auto start once the disks boots up. (Remember this will only test the 48K in your system)
 
 ![ROM adapter in card](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/Screen%20Shot%202023-08-27%20at%207.45.43%20PM.png?raw=true)
 
