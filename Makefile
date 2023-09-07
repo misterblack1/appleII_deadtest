@@ -18,7 +18,7 @@ CHECKSUM = sha1sum --tag
 config.inc: config_inc.sh *.asm inc/*
 	sh $< > $@
 
-.INTERMEDIATE: config.inc
+.SECONDARY: config.inc
 
 
 export QUICKTEST
@@ -38,10 +38,10 @@ run: $(OUTPUT)
 	$(MAME) apple2p -ramsize $(RAMSIZE) -keepaspect -volume -10 -window -resolution 800x600 -skip_gameinfo -debug -debugger $(DEBUGGER)
 
 clean: 
-	rm -f *.lst *.o *.map *.sym config_inc.sh
+	rm -f *.lst *.o *.map *.sym
 
 cleanall: clean
-	rm -f *.bin
+	rm -f apple2.bin config.inc appleII_deadtest*.zip
 
 showver:
 	@git describe --tags --long --always --dirty=-L --broken=-X

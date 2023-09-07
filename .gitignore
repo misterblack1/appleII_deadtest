@@ -9,3 +9,5 @@ cfg/
 config.inc
 *.bin
 !a2vmemnoram.bin
+*.zip
+*.html
