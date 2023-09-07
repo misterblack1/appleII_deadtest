@@ -6,7 +6,7 @@ OUTPUT = apple2.bin
 RAMSIZE = 16K
 
 
-VERSION_STR = $(shell git describe --tags --long --always --dirty=-L --broken=-X | tr a-z A-Z)
+VERSION_STR = $(shell git describe --tags --always --dirty=-L --broken=-X | tr a-z A-Z)
 ifeq ("x$(VERSION_STR)", "x")
 	VERSION_STR := LOCAL_BUILD
 endif
