@@ -22,7 +22,7 @@ all: apple2.bin a2vmemnoram.bin
 	-@$(CHECKSUM) $@
 
 version.inc:
-	@echo ".define VERSION_STR \"$(VERSION_STR)\"" > $@
+	echo ".define VERSION_STR \"$(VERSION_STR)\"" > $@
 
 
 apple2.bin: inc/marchu_zpsp.asm inc/marchu.asm inc/a2console.asm inc/a2macros.inc inc/a2constants.inc
@@ -46,7 +46,10 @@ run: $(OUTPUT)
 clean: 
 	rm -f *.lst *.o *.map *.sym version.inc
 
+cleanall: clean
+	rm -f *.bin
+
 showver:
 	@git describe --tags --long --always --dirty=-L --broken=-X
 
-.PHONY: all test clean showver version.inc run debug
+.PHONY: all test clean cleanall showver version.inc run debug
