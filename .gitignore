@@ -6,6 +6,6 @@ cfg/
 *.map
 341-0020-00.f8
 *.sym
-version.inc
+config.inc
 *.bin
 !a2vmemnoram.bin

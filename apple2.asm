@@ -19,7 +19,7 @@
 .listbytes unlimited
 .feature org_per_seg
 .feature leading_dot_in_identifiers
-.include "version.inc"
+.include "config.inc"
 .include "inc/a2constants.inc"
 .include "inc/a2macros.inc"
 .list on 
