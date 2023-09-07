@@ -16,8 +16,10 @@
 ; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 .list off
+.listbytes unlimited
 .feature org_per_seg
 .feature leading_dot_in_identifiers
+.include "version.inc"
 .include "inc/a2constants.inc"
 .include "inc/a2macros.inc"
 .list on 
@@ -104,7 +106,8 @@ test_ram:
 
 .proc	show_banner
 		jsr con_cls
-		puts_centered_at 22, "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
+		; puts_centered_at 22, "APPLE DEAD TEST BY KI3V AND ADRIAN BLACK"
+		puts_centered_at 22, .concat( "APPLE DEAD TEST - ", VERSION_STR )
 		puts_centered_at 23, "TESTING RAM FROM $0200 TO $XXFF"
 		m_con_goto 23, 31
 		LDA mu_page_end

@@ -22,6 +22,23 @@
 		.byte 0
 .endmacro
 
+.macro inverse_text
+.repeat 26, I
+.charmap 'A'+I,'A'&$7F+I
+.endrepeat
+.endmac
+
+.macro normal_text
+.repeat 26, I
+.charmap 'A'+I,'A'|$80+I
+.endrepeat
+.endmac
+; .macro .inverse string
+; 	.repeat .strlen( string ), i
+; 	.byte .strat( string, i ) & %00111111
+; 	.endrepeat
+; .endmacro
+
 ; doesn't modify A
 .macro	inline_beep_xy length, period
 		.local outer, inner

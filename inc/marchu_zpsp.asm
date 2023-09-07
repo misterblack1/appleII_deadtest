@@ -232,7 +232,7 @@ zp_good:
 		; inline_print pt_msg, TXTLINE21+((40-(pt_end-pt_msg-1))/2)
 
 .proc page_test
-		; lda #$FF				; simulate error
+		; ldx #$F0				; simulate error
 		; jmp page_error
 
 		LDA #0		; write zero to zp location 0
@@ -241,39 +241,30 @@ zp_good:
 		DEY
 		BNE wz
 
-	wr:	LDA #$FF
-		STA $0100,Y		; write to the pages
-		LDA $00,Y			; check the zp address
+	wr:	STA $0100,Y			; write to the pages
+		LDX $00,Y			; check the zp address
 		BNE page_error
-		LDA #$FF
 		STA $0200,Y
-		LDA $00,Y			; check the zp address
+		LDX $00,Y			; check the zp address
 		BNE page_error
-		LDA #$FF
 		STA $0400,Y
-		LDA $00,Y			; check the zp address
+		LDX $00,Y			; check the zp address
 		BNE page_error
-		LDA #$FF
 		STA $0800,Y
-		LDA $00,Y			; check the zp address
+		LDX $00,Y			; check the zp address
 		BNE page_error
-		LDA #$FF
 		STA $1000,Y
-		LDA $00,Y			; check the zp address
+		LDX $00,Y			; check the zp address
 		BNE page_error
-		LDA #$FF
 		STA $2000,Y
-		LDA $00,Y			; check the zp address
+		LDX $00,Y			; check the zp address
 		BNE page_error
-		LDA #$FF
 		STA $4000,Y
-		LDA $00,Y			; check the zp address
+		LDX $00,Y			; check the zp address
 		BNE page_error
-		LDA #$FF
 		STA $8000,Y
-		LDA $00,Y			; check the zp address
+		LDX $00,Y			; check the zp address
 		BNE page_error
-		LDA #$FF
 		INY
 		BNE wr
 
@@ -281,7 +272,7 @@ zp_good:
 .endproc
 
 .proc page_error
-		TAX				; bat bit mask is in A, save it to X
+		; TAX				; bat bit mask is in A, save it to X
 		TXS  			; then save it in the SP
 
 		STA TXTSET		; text mode

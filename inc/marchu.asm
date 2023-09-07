@@ -69,6 +69,19 @@ FIRST_PAGE = $02
 
 .macro checkbad
 		beq :+
+		jsr markbad
+
+		; STY mu_ysave
+		; LDY mu_ptr_hi	; get the page number as index into results array
+		; ORA results,Y	; collect any bad bits
+		; STA results,Y	; store the accumulated errors back to the results array
+		; ORA all_errs	; also store one value that collects all of the bad bits found
+		; STA all_errs
+		; LDY mu_ysave
+	:
+.endmac
+
+.proc	markbad
 		STY mu_ysave
 		LDY mu_ptr_hi	; get the page number as index into results array
 		ORA results,Y	; collect any bad bits
@@ -76,8 +89,8 @@ FIRST_PAGE = $02
 		ORA all_errs	; also store one value that collects all of the bad bits found
 		STA all_errs
 		LDY mu_ysave
-	:
-.endmac
+		RTS
+.endproc
 
 ; marchU
 ; returns bitmask of bad bits in A
