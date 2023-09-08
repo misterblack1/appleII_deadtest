@@ -1,5 +1,6 @@
 roms/
 cfg/
+old/
 *.lst
 *.o
 # *.bin
@@ -11,3 +12,4 @@ config.inc
 !a2vmemnoram.bin
 *.zip
 *.html
+*.dsk

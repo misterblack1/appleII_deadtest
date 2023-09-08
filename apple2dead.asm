@@ -160,10 +160,10 @@ pe_end:
 ;-----------------------------------------------------------------------------
 ; end of the code	
 	endofrom = *
-.out .sprintf("    size of code: %d bytes",endofrom-romstart)
+.out .sprintf("    size: %d, available %d",endofrom-romstart,$FFFA-endofrom)
 	.res ($FFFA-endofrom), $FF ; fills the unused space with $FF 
 
 ; vectors
 	; .org $FFFA
 .segment "VECTORS"
-	.word	romstart,romstart,romstart
+	vectors: .word	romstart,romstart,romstart
