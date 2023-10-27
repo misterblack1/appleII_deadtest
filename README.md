@@ -96,6 +96,7 @@ For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (Ther
 * Remember that each bit of DRAM in each bank is parallel with the other banks, so even if the test is running on the first 4K of RAM, you could have a bad chip in an adjacent bank causing a bit error in the first 4K.
 
 ## To use this ROM
+(See also on YouTube: [Apple II Dead Test Diagnostic: How it works on a good system](https://youtu.be/60skMMOYuAw?si=O4dUQrf9blEDD3wS))
 
 * It is designed to run in the `F8` ROM socket on the Apple II, Apple II+, language card or Apple ROM card.
 * Since Apple uses 2316 (2K) mask ROMs on their motherboard and on the Apple ROM card, you will need an adapter to use an EPROM in any of these sockets. (Make one or use a PCB).
@@ -104,7 +105,7 @@ For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (Ther
 * The Platinum //e has `CF` ROM which is a 27128 (16K) so you would load this `F8` ROM into the top of the chip (`$3800` to map into `$F800`)
 * The Apple //c ROM is 27256 (32k) and we have not tested this on the //c, but you would need to find the right location to load this ROM into the EPROM so it would start at `$F800` in the 6502 memory map.
 
-There is also a 170K DOS 3.3 disk image [`apple2dead.dsk`](https://github.com/misterblack1/appleII_deadtest/releases/latest/download/apple2dead.dsk) in the [Releases](https://github.com/misterblack1/appleII_deadtest/releases) page.  You can try that out if your system is working well enough to boot into DOS *AND* you have a working language card installed in your system. It will auto start once the disks boots up. (Remember this will only test the first 48K in your system even if you have more.)
+There is also a 170K DOS 3.3 disk image [`apple2dead.dsk`](https://github.com/misterblack1/appleII_deadtest/releases/latest/download/apple2dead.dsk) in the [Releases](https://github.com/misterblack1/appleII_deadtest/releases) page.  You can try that out if your system is working well enough to boot into DOS *AND* you have a working language card installed in your system (or a machine with built-in language card function... all 64K+ Apples II family machines and most/all 64K+ clones). It will auto start once the disk boots up. (Remember this will only test the first 48K in your system even if you have more.  The disk version loads the ROM image into the top 16K language card area.)
 
 ![ROM adapter in card](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/Screen%20Shot%202023-08-27%20at%207.45.43%20PM.png?raw=true)
 
