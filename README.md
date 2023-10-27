@@ -1,5 +1,7 @@
 # Apple ][ Dead Test RAM Diagnostic ROM
 
+![animation](pictures/apple2dead.gif?raw=true)
+
 #### A Note on Downloading and Programming
 The file you want for programming an EPROM is [`apple2dead.bin`](https://github.com/misterblack1/appleII_deadtest/releases/latest/download/apple2dead.bin).  You don't need to compile/assemble this ROM if you just want to use it to diagnose your machine.  You can always find the most recent ROM image on the **[Releases](https://github.com/misterblack1/appleII_deadtest/releases)** page, also linked on the right side of this repository page.
 
@@ -58,7 +60,7 @@ You don't have to worry about losing the results though.  All of the errors are 
 
 ## Interpreting the result display grid
 The ROM will display a grid showing you where the bit errors are:
-![RAM errors detected](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/grid%20errors.jpg?raw=true)
+![RAM errors detected](pictures/grid%20errors.jpg?raw=true)
 
 If you do not see this grid after the March-U test finishes and beeps, you likely have a problem with the video display circuitry on your Apple II. You must fix that first.
 
@@ -107,7 +109,7 @@ For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (Ther
 
 There is also a 170K DOS 3.3 disk image [`apple2dead.dsk`](https://github.com/misterblack1/appleII_deadtest/releases/latest/download/apple2dead.dsk) in the [Releases](https://github.com/misterblack1/appleII_deadtest/releases) page.  You can try that out if your system is working well enough to boot into DOS *AND* you have a working language card installed in your system (or a machine with built-in language card function... all 64K+ Apples II family machines and most/all 64K+ clones). It will auto start once the disk boots up. (Remember this will only test the first 48K in your system even if you have more.  The disk version loads the ROM image into the top 16K language card area.)
 
-![ROM adapter in card](https://github.com/misterblack1/appleII_deadtest/blob/main/pictures/Screen%20Shot%202023-08-27%20at%207.45.43%20PM.png?raw=true)
+![ROM adapter in card](pictures/language_card.jpg?raw=true)
 
 ## To assemble the ROM (Linux or WSL on Windows)
 You only need to assemble if you are planning to make changes.  Otherwise see the **[Releases](https://github.com/misterblack1/appleII_deadtest/releases)** page.
