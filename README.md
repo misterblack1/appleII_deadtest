@@ -84,6 +84,9 @@ Pages $40 to $7F   D  D0 D1 D2 D3 D4 D5 D6 D7  D   RAM from $4000 to $7FFF
 Pages $00 to $3F   C  D0 D1 D2 D3 D4 D5 D6 D7  C   RAM from $0000 to $3FFF 
                   ROW 3  4  5  6  7  8  9  10 ROW
 ```
+
+![Alt text](<pictures/A2 logic board RAM.jpg>)
+
 For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (There is no way for us to make a beep code for 0, which is why D0-D7 are represented by 1-8 beeps, respectively).
 
 ## Limitations
