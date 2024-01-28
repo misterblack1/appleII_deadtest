@@ -114,6 +114,14 @@ There is also a 170K DOS 3.3 disk image [`apple2dead.dsk`](https://github.com/mi
 
 ![ROM adapter in card](pictures/language_card.jpg?raw=true)
 
+There are a couple projects that help you use the ROM:
+
+[Motherboard ROM switcher](https://github.com/kerokero5150/appleII_deadtest_Swicher_Board)
+
+[Language Card Replica](https://github.com/btb/LanguageCard)
+
+I have tested Bradley's LanguageCard. It has a toggle switch that sticks through the back of the machine that allows you to select from 3 possibel ROMs. (I personally installed Applesoft BASIC, Integer BASIC and the Dead Test ROM.) 
+
 ## To assemble the ROM (Linux or WSL on Windows)
 You only need to assemble if you are planning to make changes.  Otherwise see the **[Releases](https://github.com/misterblack1/appleII_deadtest/releases)** page.
 
