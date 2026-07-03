@@ -37,6 +37,8 @@ The test should work fine on the Apple IIe and IIc as well, but please keep in m
 * One long low beep followed by a number of medium beeps:
   * This is a zero page or stack page error.  
   * The count of medium beeps tells you which bit, and thus which chip (see below).
+  * The ROM should be in text mode (page 1.) As it beeps, it will switched toe Low-Res graphics, mixed mode, to help you count the number of beeps if you have no speaker or that part of the motherboard is bad.
+  * Please know that a beep code to indicate bad RAM may be misleading and can be caused by many other faults on the board that is precenting the CPU from accessing the RAM.
 * A brief trill of high beeps, followed by a number of medium beeps:
   * This is a page error.  Address lines inside a chip are being crossed, so writes to one location corrupt bits in another location.
   * Again, the count of medium beeps tells you which bit and chip (see below).
