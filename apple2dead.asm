@@ -40,6 +40,7 @@ romstart:
 
 
 		sta TXTSET 		; turn on text
+		sta LOWSCR		; set page 1
 		sta CLRALTCHAR	; turn off alt charset on later apple machines
 		sta CLR80VID	; turn off 80 col on //e or //c
 

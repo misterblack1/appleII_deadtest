@@ -13,3 +13,4 @@ config.inc
 *.zip
 *.html
 *.dsk
+.vscode
