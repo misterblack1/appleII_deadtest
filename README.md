@@ -66,6 +66,8 @@ The ROM will display a grid showing you where the bit errors are:
 
 If you do not see this grid after the March-U test finishes and beeps, you likely have a problem with the video display circuitry on your Apple II. You must fix that first.
 
+If you have multiple errors, I recommend shooting a video of your screen, so you can freeze frame on the results. 
+
 To understand how to decode the grid, it will show all of the pages that contain a bit error. In the above picture it is telling you:
 
 * Page `$19` has a bit error `$08`
@@ -90,6 +92,8 @@ Pages $00 to $3F   C  D0 D1 D2 D3 D4 D5 D6 D7  C   RAM from $0000 to $3FFF
 ![Alt text](<pictures/A2 logic board RAM.jpg>)
 
 For beep codes, remember that 1 beep = Bit 1 or D0. 8 beeps = Bit 8 or D7. (There is no way for us to make a beep code for 0, which is why D0-D7 are represented by 1-8 beeps, respectively).
+
+A Windows program has been created [github.com/RudyRetroIntel/Vintage-Computer-Diagnostics](https://github.com/RudyRetroIntel/Vintage-Computer-Diagnostics) which may help you decode the error result screen and lead you to which RAM chip is bad. 
 
 ## Limitations
 
